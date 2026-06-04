@@ -142,8 +142,31 @@ class AdminServerController extends Controller
 
     public function destroy(int $id)
     {
-        Server::findOrFail($id)->delete();
-        return redirect()->route('admin.servers.index')->with('success', 'Server deleted.');
+        $server = Server::findOrFail($id);
+
+        DB::transaction(function () use ($server) {
+            $sid = $server->serverId;
+
+            // Config
+            DB::table('hlstats_Servers_Config')->where('serverId', $sid)->delete();
+
+            // Events
+            foreach ([
+                'hlstats_Events_Frags', 'hlstats_Events_Chat', 'hlstats_Events_Connects',
+                'hlstats_Events_Disconnects', 'hlstats_Events_Suicides', 'hlstats_Events_Teamkills',
+                'hlstats_Events_PlayerActions', 'hlstats_Events_PlayerPlayerActions',
+                'hlstats_Events_TeamBonuses', 'hlstats_Events_Admin', 'hlstats_Events_ChangeName',
+                'hlstats_Events_ChangeRole', 'hlstats_Events_ChangeTeam', 'hlstats_Events_Entries',
+                'hlstats_Events_Rcon', 'hlstats_Events_Latency', 'hlstats_Events_StatsmeLatency',
+                'hlstats_Events_Statsme', 'hlstats_Events_Statsme2', 'hlstats_Events_StatsmeTime',
+            ] as $table) {
+                DB::table($table)->where('serverId', $sid)->delete();
+            }
+
+            $server->delete();
+        });
+
+        return redirect()->route('admin.servers.index')->with('success', 'Server and all related data deleted.');
     }
 
     private function validated(Request $request): array

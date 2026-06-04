@@ -68,8 +68,53 @@ class AdminGameController extends Controller
 
     public function destroy(string $code)
     {
-        Game::findOrFail($code)->delete();
-        return redirect()->route('admin.games.index')->with('success', 'Game deleted.');
+        $game = Game::findOrFail($code);
+
+        DB::transaction(function () use ($code) {
+            $serverIds = DB::table('hlstats_Servers')->where('game', $code)->pluck('serverId');
+
+            // Server-level data
+            if ($serverIds->isNotEmpty()) {
+                DB::table('hlstats_Servers_Config')->whereIn('serverId', $serverIds)->delete();
+                foreach ([
+                    'hlstats_Events_Frags', 'hlstats_Events_Chat', 'hlstats_Events_Connects',
+                    'hlstats_Events_Disconnects', 'hlstats_Events_Suicides', 'hlstats_Events_Teamkills',
+                    'hlstats_Events_PlayerActions', 'hlstats_Events_PlayerPlayerActions',
+                    'hlstats_Events_TeamBonuses', 'hlstats_Events_Admin', 'hlstats_Events_ChangeName',
+                    'hlstats_Events_ChangeRole', 'hlstats_Events_ChangeTeam', 'hlstats_Events_Entries',
+                    'hlstats_Events_Rcon', 'hlstats_Events_Latency', 'hlstats_Events_StatsmeLatency',
+                    'hlstats_Events_Statsme', 'hlstats_Events_Statsme2', 'hlstats_Events_StatsmeTime',
+                ] as $table) {
+                    DB::table($table)->whereIn('serverId', $serverIds)->delete();
+                }
+                DB::table('hlstats_Servers')->where('game', $code)->delete();
+            }
+
+            // Game-level data
+            $playerIds = DB::table('hlstats_Players')->where('game', $code)->pluck('playerId');
+            if ($playerIds->isNotEmpty()) {
+                DB::table('hlstats_PlayerNames')->whereIn('playerId', $playerIds)->delete();
+                DB::table('hlstats_PlayerUniqueIds')->whereIn('playerId', $playerIds)->delete();
+                DB::table('hlstats_Players_Awards')->where('game', $code)->delete();
+                DB::table('hlstats_Players_Ribbons')->where('game', $code)->delete();
+                DB::table('hlstats_Players_History')->where('game', $code)->delete();
+            }
+            DB::table('hlstats_Players')->where('game', $code)->delete();
+            DB::table('hlstats_Clans')->where('game', $code)->delete();
+            DB::table('hlstats_Weapons')->where('game', $code)->delete();
+            DB::table('hlstats_Ranks')->where('game', $code)->delete();
+            DB::table('hlstats_Teams')->where('game', $code)->delete();
+            DB::table('hlstats_Roles')->where('game', $code)->delete();
+            DB::table('hlstats_Actions')->where('game', $code)->delete();
+            DB::table('hlstats_Awards')->where('game', $code)->delete();
+            DB::table('hlstats_Ribbons')->where('game', $code)->delete();
+            DB::table('hlstats_Maps_Counts')->where('game', $code)->delete();
+            DB::table('hlstats_Games_Defaults')->where('code', $code)->delete();
+
+            Game::where('code', $code)->delete();
+        });
+
+        return redirect()->route('admin.games.index')->with('success', "Game [{$code}] and all related data deleted.");
     }
 
     public function showDuplicate(string $code)

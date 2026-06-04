@@ -16,7 +16,8 @@
                         <td class="hlx-text">{{ $server->game }}</td>
                         <td style="white-space:nowrap;">
                             <a href="{{ route('admin.servers.edit', $server->serverId) }}" class="hlx-link" style="margin-right:8px;">Edit</a>
-                            <form action="{{ route('admin.servers.destroy', $server->serverId) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this server?')">
+                            <form action="{{ route('admin.servers.destroy', $server->serverId) }}" method="POST" style="display:inline;"
+                                  onsubmit="return confirm('Supprimer le serveur {{ addslashes($server->name) }} ?\n\n⚠ Toutes les données liées (config, événements) seront définitivement supprimées.')">
                                 @csrf @method('DELETE')
                                 <button type="submit" style="background:none; border:none; color:var(--status-offline); cursor:pointer; font-size:var(--font-size-sm); padding:0;">Delete</button>
                             </form>

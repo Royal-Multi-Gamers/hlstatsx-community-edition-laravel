@@ -17,7 +17,7 @@
                             <a href="{{ route('admin.games.edit', $game->code) }}" class="hlx-link">Edit</a>
                             <a href="{{ route('admin.games.duplicate', $game->code) }}" class="hlx-link" style="color:var(--text-muted);">Duplicate</a>
                             <form method="POST" action="{{ route('admin.games.destroy', $game->code) }}"
-                                  onsubmit="return confirm('Delete game {{ addslashes($game->name) }}? This does not delete players or servers using this game.')">
+                                  onsubmit="return confirm('Supprimer le jeu {{ addslashes($game->name) }} ?\n\n⚠ Tous les joueurs, serveurs, armes, rangs, événements et données liées seront définitivement supprimés.')">
                                 @csrf @method('DELETE')
                                 <button type="submit" style="background:none; border:none; color:var(--status-offline); cursor:pointer; font-size:var(--font-size-sm); padding:0;">Delete</button>
                             </form>
