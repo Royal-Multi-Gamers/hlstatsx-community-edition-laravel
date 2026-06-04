@@ -18,7 +18,7 @@ La base de données doit déjà exister et contenir les tables `hlstats_*` gén�
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition.git
+git clone https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition-laravel.git
 cd hlstatsx-community-edition
 
 # 2. Dépendances PHP

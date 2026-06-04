@@ -47,4 +47,8 @@ return [
         'site_subtitle' => env('HLSTATS_SITE_SUBTITLE', ''),
     ],
 
+    'github' => [
+        'token' => env('GITHUB_TOKEN'),
+    ],
+
 ];

@@ -13,7 +13,7 @@
  * Licensed under the GNU General Public License v2.0
  * https://www.gnu.org/licenses/gpl-2.0.html
  *
- * https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition
+ * https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition-laravel
  */
 
 namespace App\Http\Controllers\Admin;
@@ -68,7 +68,7 @@ class AdminDashboardController extends Controller
             try {
                 $response = Http::timeout(5)
                     ->withHeaders(['User-Agent' => 'hlstatsx-ce-update-checker'])
-                    ->get('https://api.github.com/repos/Royal-Multi-Gamers/hlstatsx-community-edition/releases/latest');
+                    ->get('https://api.github.com/repos/Royal-Multi-Gamers/hlstatsx-community-edition-laravel/releases/latest');
 
                 if ($response->successful()) {
                     return $response->json();

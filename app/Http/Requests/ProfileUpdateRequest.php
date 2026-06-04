@@ -13,7 +13,7 @@
  * Licensed under the GNU General Public License v2.0
  * https://www.gnu.org/licenses/gpl-2.0.html
  *
- * https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition
+ * https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition-laravel
  */
 
 namespace App\Http\Requests;

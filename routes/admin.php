@@ -239,6 +239,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('update')->name('update.')->group(function () {
             Route::get('/', [AdminUpdateController::class, 'index'])->name('index');
             Route::post('/apply', [AdminUpdateController::class, 'apply'])->name('apply');
+            Route::post('/stream', [AdminUpdateController::class, 'stream'])->name('stream');
         });
     });
 });
