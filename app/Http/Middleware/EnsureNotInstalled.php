@@ -9,7 +9,7 @@ class EnsureNotInstalled
 {
     public function handle(Request $request, Closure $next)
     {
-        if (env('APP_INSTALLED') === 'true') {
+        if (file_exists(storage_path('framework/installed'))) {
             return redirect('/');
         }
         return $next($request);

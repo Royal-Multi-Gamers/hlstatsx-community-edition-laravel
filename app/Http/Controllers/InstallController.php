@@ -180,8 +180,8 @@ class InstallController extends Controller
             // Persist APP_URL
             $this->updateEnv(['APP_URL' => $data['app_url']]);
 
-            // Mark as installed
-            $this->updateEnv(['APP_INSTALLED' => 'true']);
+            // Mark as installed (fichier marqueur — indépendant du cache config)
+            file_put_contents(storage_path('framework/installed'), date('Y-m-d H:i:s'));
 
             // Clear caches
             Artisan::call('optimize:clear');
