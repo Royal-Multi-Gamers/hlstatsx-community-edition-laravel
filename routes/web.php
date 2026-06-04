@@ -19,8 +19,27 @@ use App\Http\Controllers\Frontend\RoleController;
 use App\Http\Controllers\Frontend\IngameController;
 use App\Http\Controllers\Frontend\WeaponController;
 use App\Http\Controllers\Frontend\VoiceCommController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LocaleController;
 use Illuminate\Support\Facades\Route;
+
+// ── Installation wizard (accessible uniquement si APP_INSTALLED != true) ──
+Route::prefix('install')->name('install.')->group(function () {
+    // Page de confirmation toujours accessible
+    Route::get('/done', [InstallController::class, 'done'])->name('done');
+
+    // Les étapes sont bloquées une fois installé
+    Route::middleware(\App\Http\Middleware\EnsureNotInstalled::class)->group(function () {
+        Route::get('/',       [InstallController::class, 'step1'])->name('step1');
+        Route::post('/step1', [InstallController::class, 'step1Post'])->name('step1.post');
+        Route::get('/step2',  [InstallController::class, 'step2'])->name('step2');
+        Route::post('/step2', [InstallController::class, 'step2Post'])->name('step2.post');
+        Route::get('/step3',  [InstallController::class, 'step3'])->name('step3');
+        Route::post('/step3', [InstallController::class, 'step3Post'])->name('step3.post');
+        Route::get('/step4',  [InstallController::class, 'step4'])->name('step4');
+        Route::post('/step4', [InstallController::class, 'step4Post'])->name('step4.post');
+    });
+});
 
 // Language switch
 Route::post('/language/{locale}', [LocaleController::class, 'switch'])->name('language.switch');
