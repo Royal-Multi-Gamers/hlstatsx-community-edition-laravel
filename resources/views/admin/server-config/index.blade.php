@@ -8,7 +8,7 @@
             <select name="server_id" onchange="this.form.submit()"
                     style="background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:5px 10px; font-size:var(--font-size-sm);">
                 @foreach($servers as $srv)
-                    <option value="{{ $srv->id }}" {{ $srv->id == $serverId ? 'selected' : '' }}>{{ $srv->name }} ({{ $srv->address }}:{{ $srv->port }})</option>
+                    <option value="{{ $srv->serverId }}" {{ $srv->serverId == $serverId ? 'selected' : '' }}>{{ $srv->name }} ({{ $srv->address }}:{{ $srv->port }})</option>
                 @endforeach
             </select>
         </form>

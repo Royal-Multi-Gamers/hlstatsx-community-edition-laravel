@@ -28,7 +28,7 @@ class AdminServerConfigController extends Controller
     public function index(Request $request)
     {
         $servers  = Server::orderBy('name')->get();
-        $serverId = $request->input('server', $servers->first()?->serverId);
+        $serverId = $request->input('server_id', $servers->first()?->serverId);
         $configs  = ServerConfig::where('serverId', $serverId)->orderBy('parameter')->get();
         return view('admin.server-config.index', compact('servers', 'serverId', 'configs'));
     }
@@ -36,17 +36,17 @@ class AdminServerConfigController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'serverId'  => ['required', 'integer', 'exists:hlstats_Servers,serverId'],
+            'server_id' => ['required', 'integer', 'exists:hlstats_Servers,serverId'],
             'parameter' => ['required', 'string', 'max:50'],
             'value'     => ['required', 'string', 'max:128'],
         ]);
 
         ServerConfig::updateOrCreate(
-            ['serverId' => $data['serverId'], 'parameter' => $data['parameter']],
+            ['serverId' => $data['server_id'], 'parameter' => $data['parameter']],
             ['value' => $data['value']]
         );
 
-        return redirect()->route('admin.server-config.index', ['server' => $data['serverId']])->with('success', 'Config saved.');
+        return redirect()->route('admin.server-config.index', ['server_id' => $data['server_id']])->with('success', 'Config saved.');
     }
 
     public function update(Request $request, int $id)
@@ -56,7 +56,7 @@ class AdminServerConfigController extends Controller
             'value' => ['required', 'string', 'max:128'],
         ]);
         $config->update($data);
-        return redirect()->route('admin.server-config.index', ['server' => $config->serverId])->with('success', 'Config updated.');
+        return redirect()->route('admin.server-config.index', ['server_id' => $config->serverId])->with('success', 'Config updated.');
     }
 
     public function destroy(int $id)
@@ -64,6 +64,6 @@ class AdminServerConfigController extends Controller
         $config   = ServerConfig::findOrFail($id);
         $serverId = $config->serverId;
         $config->delete();
-        return redirect()->route('admin.server-config.index', ['server' => $serverId])->with('success', 'Config deleted.');
+        return redirect()->route('admin.server-config.index', ['server_id' => $serverId])->with('success', 'Config deleted.');
     }
 }
