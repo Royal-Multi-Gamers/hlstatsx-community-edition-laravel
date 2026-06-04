@@ -36,7 +36,23 @@
 
     <div style="border:1px solid var(--border); border-radius:var(--border-radius-md); overflow:hidden;">
         <table class="hlx-table">
-            <thead><tr><th>Parameter</th><th>Value</th><th>Actions</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th style="text-align:right;">
+                        <form method="POST" action="{{ route('admin.server-config.populate-defaults') }}" style="display:inline;"
+                              onsubmit="return confirm('Peupler depuis les défauts du jeu ?\n\n✔ Seuls les paramètres MANQUANTS seront ajoutés.\n✘ Vos réglages existants ne seront PAS modifiés ni supprimés.')">
+                            @csrf
+                            <input type="hidden" name="server_id" value="{{ $serverId }}">
+                            <button type="submit" style="background:none; border:none; color:var(--hlx-gold,#c9a84c); cursor:pointer; font-size:var(--font-size-sm); padding:0; white-space:nowrap;"
+                                    title="Importe uniquement les paramètres manquants — vos réglages existants ne sont pas modifiés">
+                                &#8659; Peupler depuis les défauts du jeu
+                            </button>
+                        </form>
+                    </th>
+                </tr>
+            </thead>
             <tbody>
                 @forelse($configs as $cfg)
                     <tr>

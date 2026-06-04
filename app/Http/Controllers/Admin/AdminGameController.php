@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Game;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminGameController extends Controller
 {
@@ -69,5 +70,139 @@ class AdminGameController extends Controller
     {
         Game::findOrFail($code)->delete();
         return redirect()->route('admin.games.index')->with('success', 'Game deleted.');
+    }
+
+    public function showDuplicate(string $code)
+    {
+        $game = Game::findOrFail($code);
+        $counts = [
+            'weapons'        => DB::table('hlstats_Weapons')->where('game', $code)->count(),
+            'ranks'          => DB::table('hlstats_Ranks')->where('game', $code)->count(),
+            'teams'          => DB::table('hlstats_Teams')->where('game', $code)->count(),
+            'roles'          => DB::table('hlstats_Roles')->where('game', $code)->count(),
+            'actions'        => DB::table('hlstats_Actions')->where('game', $code)->count(),
+            'awards'         => DB::table('hlstats_Awards')->where('game', $code)->count(),
+            'ribbons'        => DB::table('hlstats_Ribbons')->where('game', $code)->count(),
+            'server_config'  => DB::table('hlstats_Games_Defaults')->where('code', $code)->count(),
+        ];
+        return view('admin.games.duplicate', compact('game', 'counts'));
+    }
+
+    public function duplicate(Request $request, string $code)
+    {
+        $source = Game::findOrFail($code);
+
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:32', 'unique:hlstats_Games,code', 'regex:/^[a-z0-9_]+$/'],
+            'name' => ['required', 'string', 'max:128'],
+        ]);
+
+        DB::transaction(function () use ($source, $data) {
+            $newCode = $data['code'];
+
+            Game::create([
+                'code'     => $newCode,
+                'name'     => $data['name'],
+                'realgame' => $source->realgame,
+                'hidden'   => $source->hidden,
+            ]);
+
+            // Weapons
+            DB::table('hlstats_Weapons')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Weapons')->insert([
+                    'game'      => $newCode,
+                    'code'      => $r->code,
+                    'name'      => $r->name,
+                    'modifier'  => $r->modifier,
+                    'kills'     => 0,
+                    'headshots' => 0,
+                ]));
+
+            // Ranks
+            DB::table('hlstats_Ranks')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Ranks')->insert([
+                    'game'     => $newCode,
+                    'image'    => $r->image,
+                    'minKills' => $r->minKills,
+                    'maxKills' => $r->maxKills,
+                    'rankName' => $r->rankName,
+                ]));
+
+            // Teams
+            DB::table('hlstats_Teams')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Teams')->insert([
+                    'game'               => $newCode,
+                    'code'               => $r->code,
+                    'name'               => $r->name,
+                    'hidden'             => $r->hidden,
+                    'playerlist_bgcolor' => $r->playerlist_bgcolor,
+                    'playerlist_color'   => $r->playerlist_color,
+                    'playerlist_index'   => $r->playerlist_index,
+                ]));
+
+            // Roles
+            DB::table('hlstats_Roles')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Roles')->insert([
+                    'game'   => $newCode,
+                    'code'   => $r->code,
+                    'name'   => $r->name,
+                    'hidden' => $r->hidden,
+                    'picked' => 0,
+                    'kills'  => 0,
+                    'deaths' => 0,
+                ]));
+
+            // Actions
+            DB::table('hlstats_Actions')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Actions')->insert([
+                    'game'                    => $newCode,
+                    'code'                    => $r->code,
+                    'reward_player'           => $r->reward_player,
+                    'reward_team'             => $r->reward_team,
+                    'team'                    => $r->team,
+                    'description'             => $r->description,
+                    'for_PlayerActions'       => $r->for_PlayerActions,
+                    'for_PlayerPlayerActions' => $r->for_PlayerPlayerActions,
+                    'for_TeamActions'         => $r->for_TeamActions,
+                    'for_WorldActions'        => $r->for_WorldActions,
+                    'count'                   => 0,
+                ]));
+
+            // Awards
+            DB::table('hlstats_Awards')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Awards')->insert([
+                    'game'           => $newCode,
+                    'awardType'      => $r->awardType,
+                    'code'           => $r->code,
+                    'name'           => $r->name,
+                    'verb'           => $r->verb,
+                    'd_winner_id'    => 0,
+                    'd_winner_count' => 0,
+                    'g_winner_id'    => 0,
+                    'g_winner_count' => 0,
+                ]));
+
+            // Ribbons
+            DB::table('hlstats_Ribbons')->where('game', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Ribbons')->insert([
+                    'game'       => $newCode,
+                    'awardCode'  => $r->awardCode,
+                    'awardCount' => $r->awardCount,
+                    'special'    => $r->special,
+                    'image'      => $r->image,
+                    'ribbonName' => $r->ribbonName,
+                ]));
+
+            // Server config defaults (Games_Defaults)
+            DB::table('hlstats_Games_Defaults')->where('code', $source->code)->get()
+                ->each(fn($r) => DB::table('hlstats_Games_Defaults')->insertOrIgnore([
+                    'code'      => $newCode,
+                    'parameter' => $r->parameter,
+                    'value'     => $r->value,
+                ]));
+        });
+
+        return redirect()->route('admin.games.index')
+            ->with('success', "Jeu [{$source->code}] dupliqué en [{$data['code']}] avec succès.");
     }
 }

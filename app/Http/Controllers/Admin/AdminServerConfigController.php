@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Server;
 use App\Models\ServerConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminServerConfigController extends Controller
 {
@@ -65,5 +66,42 @@ class AdminServerConfigController extends Controller
         $serverId = $config->serverId;
         $config->delete();
         return redirect()->route('admin.server-config.index', ['server_id' => $serverId])->with('success', 'Config deleted.');
+    }
+
+    public function populateFromDefaults(Request $request)
+    {
+        $data = $request->validate([
+            'server_id' => ['required', 'integer', 'exists:hlstats_Servers,serverId'],
+        ]);
+
+        $server   = Server::findOrFail($data['server_id']);
+        $defaults = DB::table('hlstats_Games_Defaults')->where('code', $server->game)->get();
+
+        if ($defaults->isEmpty()) {
+            return redirect()->route('admin.server-config.index', ['server_id' => $server->serverId])
+                ->with('success', 'Aucun défaut trouvé pour le jeu ' . $server->game . '.');
+        }
+
+        $inserted = 0;
+        foreach ($defaults as $default) {
+            $exists = ServerConfig::where('serverId', $server->serverId)
+                ->where('parameter', $default->parameter)
+                ->exists();
+            if (!$exists) {
+                ServerConfig::create([
+                    'serverId'  => $server->serverId,
+                    'parameter' => $default->parameter,
+                    'value'     => $default->value,
+                ]);
+                $inserted++;
+            }
+        }
+
+        $msg = $inserted > 0
+            ? "{$inserted} paramètre(s) importé(s) depuis les défauts du jeu {$server->game}."
+            : 'Tous les paramètres par défaut existent déjà.';
+
+        return redirect()->route('admin.server-config.index', ['server_id' => $server->serverId])
+            ->with('success', $msg);
     }
 }

@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use App\Models\Server;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminServerController extends Controller
 {
@@ -34,21 +35,88 @@ class AdminServerController extends Controller
     public function create()
     {
         $games = Game::visible()->orderBy('name')->get();
-        return view('admin.servers.create', compact('games'));
+        $mods  = DB::table('hlstats_Mods_Supported')->orderBy('name')->get();
+        return view('admin.servers.create', compact('games', 'mods'));
     }
 
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        Server::create($data);
-        return redirect()->route('admin.servers.index')->with('success', 'Server created.');
+
+        $server = DB::transaction(function () use ($request, $data) {
+            $server = Server::create($data);
+
+            $mod = $request->input('game_mod', '');
+
+            // 1. Copie des Mods_Defaults pour l'admin mod sélectionné
+            DB::table('hlstats_Mods_Defaults')
+                ->where('code', $mod)
+                ->get()
+                ->each(fn($r) => DB::table('hlstats_Servers_Config')->insertOrIgnore([
+                    'serverId'  => $server->serverId,
+                    'parameter' => $r->parameter,
+                    'value'     => $r->value,
+                ]));
+
+            // 2. Paramètre Mod
+            DB::table('hlstats_Servers_Config')->insertOrIgnore([
+                'serverId'  => $server->serverId,
+                'parameter' => 'Mod',
+                'value'     => $mod,
+            ]);
+
+            // 3. Copie des Games_Defaults (via realgame du jeu)
+            $realgame = DB::table('hlstats_Games')
+                ->where('code', $data['game'])
+                ->value('realgame') ?? $data['game'];
+
+            DB::table('hlstats_Games_Defaults')
+                ->where('code', $realgame)
+                ->get()
+                ->each(function ($r) use ($server) {
+                    $exists = DB::table('hlstats_Servers_Config')
+                        ->where('serverId', $server->serverId)
+                        ->where('parameter', $r->parameter)
+                        ->exists();
+                    if ($exists) {
+                        DB::table('hlstats_Servers_Config')
+                            ->where('serverId', $server->serverId)
+                            ->where('parameter', $r->parameter)
+                            ->update(['value' => $r->value]);
+                    } else {
+                        DB::table('hlstats_Servers_Config')->insert([
+                            'serverId'  => $server->serverId,
+                            'parameter' => $r->parameter,
+                            'value'     => $r->value,
+                        ]);
+                    }
+                });
+
+            // 4. HLStatsURL auto
+            $hlstatsUrl = rtrim(config('app.url'), '/') . '/';
+            DB::table('hlstats_Servers_Config')
+                ->where('serverId', $server->serverId)
+                ->where('parameter', 'HLStatsURL')
+                ->update(['value' => $hlstatsUrl]);
+
+            return $server;
+        });
+
+        return redirect()
+            ->route('admin.server-config.index', ['server_id' => $server->serverId])
+            ->with('success', 'Server created. Vérifiez et ajustez la configuration ci-dessous.');
     }
 
     public function edit(int $id)
     {
         $server = Server::findOrFail($id);
         $games  = Game::visible()->orderBy('name')->get();
-        return view('admin.servers.edit', compact('server', 'games'));
+        $mods   = DB::table('hlstats_Mods_Supported')->orderBy('name')->get();
+        $currentMod = DB::table('hlstats_Servers_Config')
+            ->where('serverId', $id)
+            ->where('parameter', 'Mod')
+            ->value('value') ?? '';
+        return view('admin.servers.edit', compact('server', 'games', 'mods', 'currentMod'));
     }
 
     public function update(Request $request, int $id)
@@ -56,6 +124,19 @@ class AdminServerController extends Controller
         $server = Server::findOrFail($id);
         $data   = $this->validated($request);
         $server->update($data);
+
+        // Met à jour le paramètre Mod si fourni
+        $mod = $request->input('game_mod');
+        if ($mod !== null) {
+            DB::table('hlstats_Servers_Config')
+                ->where('serverId', $id)
+                ->where('parameter', 'Mod')
+                ->updateOrInsert(
+                    ['serverId' => $id, 'parameter' => 'Mod'],
+                    ['value' => $mod]
+                );
+        }
+
         return redirect()->route('admin.servers.index')->with('success', 'Server updated.');
     }
 

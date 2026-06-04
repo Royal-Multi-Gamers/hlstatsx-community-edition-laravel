@@ -82,6 +82,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/{code}/edit', [AdminGameController::class, 'edit'])->name('edit');
             Route::put('/{code}', [AdminGameController::class, 'update'])->name('update');
             Route::delete('/{code}', [AdminGameController::class, 'destroy'])->name('destroy');
+            Route::get('/{code}/duplicate', [AdminGameController::class, 'showDuplicate'])->name('duplicate');
+            Route::post('/{code}/duplicate', [AdminGameController::class, 'duplicate'])->name('duplicate.store');
         });
 
         // Weapons
@@ -217,6 +219,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('server-config')->name('server-config.')->group(function () {
             Route::get('/', [AdminServerConfigController::class, 'index'])->name('index');
             Route::post('/', [AdminServerConfigController::class, 'store'])->name('store');
+            Route::post('/populate-defaults', [AdminServerConfigController::class, 'populateFromDefaults'])->name('populate-defaults');
             Route::put('/{id}', [AdminServerConfigController::class, 'update'])->name('update');
             Route::delete('/{id}', [AdminServerConfigController::class, 'destroy'])->name('destroy');
         });

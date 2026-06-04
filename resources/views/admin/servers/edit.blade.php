@@ -18,6 +18,16 @@
             </select>
             @error('game') <div style="color:var(--status-offline); font-size:var(--font-size-sm); margin-top:4px;">{{ $message }}</div> @enderror
         </div>
+        <div style="margin-bottom:14px;">
+            <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">Admin Mod</label>
+            <select name="game_mod"
+                    style="width:100%; box-sizing:border-box; background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:6px 10px; font-size:var(--font-size-sm);">
+                @foreach($mods as $mod)
+                    <option value="{{ $mod->code }}" @selected(old('game_mod', $currentMod) === $mod->code)>{{ $mod->name }}</option>
+                @endforeach
+            </select>
+            @error('game_mod') <div style="color:var(--status-offline); font-size:var(--font-size-sm); margin-top:4px;">{{ $message }}</div> @enderror
+        </div>
         <div style="display:flex; gap:8px; margin-top:8px;">
             <button type="submit" class="hlx-btn-gold">Save</button>
             <a href="{{ route('admin.servers.index') }}" class="hlx-btn-green">Cancel</a>
