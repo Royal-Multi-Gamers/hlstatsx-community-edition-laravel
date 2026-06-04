@@ -144,7 +144,7 @@
             </div>
 
             {{-- System --}}
-            <div x-data="{ open: {{ request()->routeIs('admin.themes.*', 'admin.tools.*') ? 'true' : 'false' }} }">
+            <div x-data="{ open: {{ request()->routeIs('admin.themes.*', 'admin.tools.*', 'admin.update.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span>{{ __('System') }}</span>
                     <svg :class="{ 'collapsed': !open }" class="sidebar-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5L5 6.5L8 3.5"/></svg>
@@ -152,6 +152,7 @@
                 <div x-show="open" x-transition>
                     <a href="{{ route('admin.themes.index') }}" @class(['active' => request()->routeIs('admin.themes.*')])>{{ __('Themes') }}</a>
                     <a href="{{ route('admin.tools.index') }}" @class(['active' => request()->routeIs('admin.tools.*')])>{{ __('Tools') }}</a>
+                    <a href="{{ route('admin.update.index') }}" @class(['active' => request()->routeIs('admin.update.*')])>{{ __('Update') }}</a>
                 </div>
             </div>
 

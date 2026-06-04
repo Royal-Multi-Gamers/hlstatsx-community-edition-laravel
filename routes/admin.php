@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AdminServerController;
 use App\Http\Controllers\Admin\AdminTeamController;
 use App\Http\Controllers\Admin\AdminThemeController;
 use App\Http\Controllers\Admin\AdminToolsController;
+use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVoiceCommController;
 use App\Http\Controllers\Admin\AdminWeaponController;
 use Illuminate\Support\Facades\Route;
@@ -232,6 +233,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/delete-players', [AdminToolsController::class, 'deletePlayers'])->name('delete-players');
             Route::post('/partial-reset', [AdminToolsController::class, 'partialReset'])->name('partial-reset');
             Route::post('/reset-collations', [AdminToolsController::class, 'resetCollations'])->name('reset-collations');
+        });
+
+        // Update
+        Route::prefix('update')->name('update.')->group(function () {
+            Route::get('/', [AdminUpdateController::class, 'index'])->name('index');
+            Route::post('/apply', [AdminUpdateController::class, 'apply'])->name('apply');
         });
     });
 });
