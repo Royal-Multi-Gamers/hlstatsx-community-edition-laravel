@@ -230,6 +230,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/optimize-db', [AdminToolsController::class, 'optimizeDb'])->name('optimize-db');
             Route::post('/reset-game', [AdminToolsController::class, 'resetGame'])->name('reset-game');
             Route::post('/delete-players', [AdminToolsController::class, 'deletePlayers'])->name('delete-players');
+            Route::post('/partial-reset', [AdminToolsController::class, 'partialReset'])->name('partial-reset');
+            Route::post('/reset-collations', [AdminToolsController::class, 'resetCollations'])->name('reset-collations');
         });
     });
 });
