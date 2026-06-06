@@ -492,7 +492,7 @@ class AdminUpdateController extends Controller
     {
         // .phar files are executed through the PHP CLI
         $cmd = str_ends_with($bin, '.phar')
-            ? (PHP_BINARY . ' ' . escapeshellarg($bin))
+            ? ($this->resolvePhpCli() . ' ' . escapeshellarg($bin))
             : escapeshellcmd($bin);
 
         $test = @shell_exec($cmd . ' --version 2>&1');
@@ -549,7 +549,8 @@ class AdminUpdateController extends Controller
         }
 
         // Run the installer: php composer-setup.php --install-dir=... --filename=composer.phar
-        $cmd = PHP_BINARY
+        $phpCli = $this->resolvePhpCli();
+        $cmd = $phpCli
              . ' ' . escapeshellarg($setupPath)
              . ' --install-dir=' . escapeshellarg($appRoot)
              . ' --filename=composer.phar 2>&1';
@@ -572,10 +573,70 @@ class AdminUpdateController extends Controller
         @chmod($pharPath, 0755);
 
         if ($send) {
-            $send('log', ['message' => __('Composer auto-installed at :path', ['path' => $pharPath])]);
+            $send('log', ['message' => __('Composer auto-installed at :path (using :php)', ['path' => $pharPath, 'php' => $phpCli])]);
         }
 
         return $pharPath;
+    }
+
+    /**
+     * Resolve a usable PHP CLI binary.
+     *
+     * `PHP_BINARY` is unreliable under PHP-FPM (Plesk, php-fpm pools…): it
+     * points to /opt/plesk/php/X.Y/sbin/php-fpm, which cannot execute scripts.
+     * We probe common CLI paths derived from `PHP_VERSION` and fall back to
+     * `command -v php` before defaulting to plain `php`.
+     */
+    private function resolvePhpCli(): string
+    {
+        static $resolved = null;
+        if ($resolved !== null) {
+            return $resolved;
+        }
+
+        $candidates = [];
+
+        // Explicit override
+        if ($override = env('PHP_CLI_BIN')) {
+            $candidates[] = $override;
+        }
+
+        // If PHP_BINARY is NOT an FPM/CGI binary, prefer it
+        if (defined('PHP_BINARY') && PHP_BINARY && ! preg_match('/(fpm|cgi)/i', PHP_BINARY)) {
+            $candidates[] = PHP_BINARY;
+        }
+
+        // Common Plesk / Debian / Ubuntu / RHEL CLI paths, version-aware
+        $version  = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION; // e.g. 8.4
+        $majMinor = PHP_MAJOR_VERSION . PHP_MINOR_VERSION;       // e.g. 84
+
+        $candidates = array_merge($candidates, [
+            "/opt/plesk/php/{$version}/bin/php",
+            "/opt/cpanel/ea-php{$majMinor}/root/usr/bin/php",
+            "/usr/local/php{$version}/bin/php",
+            "/usr/local/bin/php{$version}",
+            "/usr/local/bin/php",
+            "/usr/bin/php{$version}",
+            "/usr/bin/php",
+        ]);
+
+        // Last-resort PATH lookups
+        $discovered = @shell_exec('command -v php 2>/dev/null');
+        if (is_string($discovered) && trim($discovered) !== '') {
+            $candidates[] = trim($discovered);
+        }
+        $candidates[] = 'php';
+
+        foreach (array_filter(array_unique($candidates)) as $candidate) {
+            $cmd  = escapeshellcmd($candidate) . ' -v 2>&1';
+            $test = @shell_exec($cmd);
+            if (is_string($test) && stripos($test, '(cli)') !== false) {
+                return $resolved = escapeshellcmd($candidate);
+            }
+        }
+
+        // Nothing verified — fall back to plain `php` and hope PATH resolves it
+        return $resolved = 'php';
     }
 
     private function getVersionInfo(): array

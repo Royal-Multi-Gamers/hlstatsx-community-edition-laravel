@@ -438,6 +438,7 @@
     "composer skipped (binary not found and auto-install failed — run it manually)": "composer ignoré (binaire introuvable et auto-installation échouée — lancez-le manuellement)",
     "Composer binary not found, attempting auto-install…": "Binaire Composer introuvable, tentative d'auto-installation…",
     "Composer auto-installed at :path": "Composer auto-installé dans :path",
+    "Composer auto-installed at :path (using :php)": "Composer auto-installé dans :path (via :php)",
     "Project root is not writable, cannot install composer.phar": "La racine du projet n'est pas accessible en écriture, impossible d'installer composer.phar",
     "Failed to download Composer installer: :error": "Échec du téléchargement de l'installeur Composer : :error",
     "Composer installer download is invalid": "Le téléchargement de l'installeur Composer est invalide",
