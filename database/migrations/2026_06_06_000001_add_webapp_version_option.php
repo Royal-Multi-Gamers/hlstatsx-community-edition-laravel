@@ -18,19 +18,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Seed webapp_version from the current `version` value when possible,
-        // so existing installs preserve their already-stored release number.
-        $current = DB::table('hlstats_Options')
-            ->where('keyname', 'version')
-            ->value('value');
-
-        $seed = $current && trim($current) !== '' && trim($current) !== '2.5.9'
-            ? trim($current)
-            : '1.0.2';
-
         DB::table('hlstats_Options')->updateOrInsert(
             ['keyname' => 'webapp_version'],
-            ['value' => $seed, 'opttype' => 1]
+            ['value' => '0.0.0', 'opttype' => 1]
         );
     }
 

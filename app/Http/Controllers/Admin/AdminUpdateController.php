@@ -168,14 +168,14 @@ class AdminUpdateController extends Controller
                 $send('progress', ['key' => 'migrate', 'percent' => 100]);
                 $send('log', ['message' => trim(Artisan::output()) ?: __('No pending migrations')]);
 
-                // 5. Composer (optional)
+                // 5. Composer (optional, auto-installs composer.phar as fallback)
                 $send('step', ['key' => 'composer', 'label' => 'composer install']);
-                $composerOutput = $this->tryComposer($appRoot);
+                $composerOutput = $this->tryComposer($appRoot, $send);
                 $send('progress', ['key' => 'composer', 'percent' => 100]);
                 $send('log', [
                     'message' => $composerOutput !== null
                         ? 'composer : ' . $composerOutput
-                        : '⚠ ' . __('composer skipped (binary not found — run it manually)'),
+                        : '⚠ ' . __('composer skipped (binary not found and auto-install failed — run it manually)'),
                 ]);
 
                 // 6. Caches
@@ -293,12 +293,12 @@ class AdminUpdateController extends Controller
             Artisan::call('migrate', ['--force' => true]);
             $log[] = __('Migrations executed: :output', ['output' => trim(Artisan::output())]);
 
-            // 6. Try composer install (optional, may fail without CLI access) ---
+            // 6. Try composer install (optional, auto-installs composer.phar as fallback)
             $composerOutput = $this->tryComposer($appRoot);
             if ($composerOutput !== null) {
                 $log[] = 'composer install : ' . $composerOutput;
             } else {
-                $log[] = '⚠ ' . __('composer install skipped (binary not found — run it manually)');
+                $log[] = '⚠ ' . __('composer install skipped (binary not found and auto-install failed — run it manually)');
             }
 
             // 7. Flush all caches -----------------------------------------------
@@ -428,19 +428,154 @@ class AdminUpdateController extends Controller
         rmdir($dir);
     }
 
-    private function tryComposer(string $appRoot): ?string
+    private function tryComposer(string $appRoot, ?callable $send = null): ?string
     {
-        $candidates = ['composer', 'composer.phar', '/usr/local/bin/composer', '/usr/bin/composer'];
+        // exec/shell_exec disabled via disable_functions?
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        if (in_array('shell_exec', $disabled, true) || in_array('exec', $disabled, true)) {
+            return null;
+        }
+
+        $candidates = array_filter([
+            // Highest priority: explicit override
+            env('COMPOSER_BIN'),
+            // Composer installed alongside the project
+            $appRoot . '/composer.phar',
+            $appRoot . '/composer',
+            // Common system-wide locations
+            '/usr/local/bin/composer',
+            '/usr/bin/composer',
+            '/opt/composer/composer',
+            // User-local locations (www-data home, current user home)
+            getenv('HOME') ? rtrim(getenv('HOME'), '/') . '/.composer/composer.phar' : null,
+            getenv('HOME') ? rtrim(getenv('HOME'), '/') . '/.local/bin/composer' : null,
+            // Last resort: PATH lookup
+            'composer',
+            'composer.phar',
+        ]);
+
+        // Try to discover via `command -v` (POSIX) when PATH lookup might work
+        $discovered = @shell_exec('command -v composer 2>/dev/null');
+        if (is_string($discovered) && trim($discovered) !== '') {
+            array_unshift($candidates, trim($discovered));
+        }
+
         foreach ($candidates as $bin) {
-            $test = shell_exec(escapeshellcmd($bin) . ' --version 2>&1');
-            if ($test && str_contains($test, 'Composer')) {
-                $cmd = escapeshellcmd($bin) . ' install --no-dev --optimize-autoloader --no-interaction 2>&1';
-                $out = [];
-                exec('cd ' . escapeshellarg($appRoot) . ' && ' . $cmd, $out);
-                return implode(' | ', array_slice($out, -3)); // last 3 lines
+            $resolved = $this->runComposerInstall($bin, $appRoot);
+            if ($resolved !== null) {
+                return $resolved;
             }
         }
+
+        // No composer found — try to auto-install composer.phar locally.
+        if ($send) {
+            $send('log', ['message' => __('Composer binary not found, attempting auto-install…')]);
+        }
+        $phar = $this->installComposerPhar($appRoot, $send);
+        if ($phar !== null) {
+            $resolved = $this->runComposerInstall($phar, $appRoot);
+            if ($resolved !== null) {
+                return __('auto-installed') . ' — ' . $resolved;
+            }
+        }
+
         return null;
+    }
+
+    /**
+     * Try a single composer candidate: validate it with --version, then run
+     * `composer install --no-dev --optimize-autoloader`. Returns the last few
+     * lines of output on success, or null if the candidate is not a working
+     * Composer binary.
+     */
+    private function runComposerInstall(string $bin, string $appRoot): ?string
+    {
+        // .phar files are executed through the PHP CLI
+        $cmd = str_ends_with($bin, '.phar')
+            ? (PHP_BINARY . ' ' . escapeshellarg($bin))
+            : escapeshellcmd($bin);
+
+        $test = @shell_exec($cmd . ' --version 2>&1');
+        if (! $test || ! str_contains($test, 'Composer')) {
+            return null;
+        }
+
+        $install = $cmd . ' install --no-dev --optimize-autoloader --no-interaction 2>&1';
+        $out = [];
+        @exec('cd ' . escapeshellarg($appRoot) . ' && ' . $install, $out);
+
+        return implode(' | ', array_slice($out, -3)); // last 3 lines
+    }
+
+    /**
+     * Fallback: download the official Composer installer from getcomposer.org
+     * and create composer.phar in the project root. Returns the absolute path
+     * on success, or null on failure.
+     */
+    private function installComposerPhar(string $appRoot, ?callable $send = null): ?string
+    {
+        if (! is_writable($appRoot)) {
+            if ($send) {
+                $send('log', ['message' => '⚠ ' . __('Project root is not writable, cannot install composer.phar')]);
+            }
+            return null;
+        }
+
+        $setupPath = $appRoot . '/composer-setup.php';
+        $pharPath  = $appRoot . '/composer.phar';
+
+        // Download the installer
+        try {
+            $client = new \GuzzleHttp\Client();
+            $client->request('GET', 'https://getcomposer.org/installer', [
+                'sink'    => $setupPath,
+                'timeout' => 60,
+                'headers' => ['User-Agent' => 'hlstatsx-ce-updater'],
+            ]);
+        } catch (\Throwable $e) {
+            @unlink($setupPath);
+            if ($send) {
+                $send('log', ['message' => '⚠ ' . __('Failed to download Composer installer: :error', ['error' => $e->getMessage()])]);
+            }
+            return null;
+        }
+
+        if (! file_exists($setupPath) || filesize($setupPath) < 1024) {
+            @unlink($setupPath);
+            if ($send) {
+                $send('log', ['message' => '⚠ ' . __('Composer installer download is invalid')]);
+            }
+            return null;
+        }
+
+        // Run the installer: php composer-setup.php --install-dir=... --filename=composer.phar
+        $cmd = PHP_BINARY
+             . ' ' . escapeshellarg($setupPath)
+             . ' --install-dir=' . escapeshellarg($appRoot)
+             . ' --filename=composer.phar 2>&1';
+        $out  = [];
+        $code = 0;
+        @exec($cmd, $out, $code);
+        @unlink($setupPath);
+
+        if ($code !== 0 || ! file_exists($pharPath)) {
+            if ($send) {
+                $send('log', [
+                    'message' => '⚠ ' . __('Composer installer failed: :error', [
+                        'error' => implode(' | ', array_slice($out, -3)) ?: 'exit ' . $code,
+                    ]),
+                ]);
+            }
+            return null;
+        }
+
+        @chmod($pharPath, 0755);
+
+        if ($send) {
+            $send('log', ['message' => __('Composer auto-installed at :path', ['path' => $pharPath])]);
+        }
+
+        return $pharPath;
     }
 
     private function getVersionInfo(): array
