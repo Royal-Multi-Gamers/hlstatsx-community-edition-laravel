@@ -31,6 +31,7 @@ class AdminUpdateController extends Controller
     private const GITHUB_API     = 'https://api.github.com/repos/Royal-Multi-Gamers/hlstatsx-community-edition-laravel/releases/latest';
     private const CODELOAD_HOST  = 'https://codeload.github.com/';
     private const API_HOST       = 'https://api.github.com/';
+    private const RELEASES_HOST  = 'https://github.com/Royal-Multi-Gamers/hlstatsx-community-edition-laravel/releases/';
 
     /** Paths relative to base_path() that must never be overwritten during an update. */
     private const PROTECTED_PATHS = ['.env', 'storage', '.git', 'vendor', 'node_modules', 'public/storage'];
@@ -85,10 +86,11 @@ class AdminUpdateController extends Controller
                     return;
                 }
 
-                $zipUrl = $info['latest']['zipball_url'] ?? null;
+                $zipUrl = $this->resolveDownloadUrl($info['latest']);
                 if (! $zipUrl ||
                     (! str_starts_with($zipUrl, self::API_HOST) &&
-                     ! str_starts_with($zipUrl, self::CODELOAD_HOST))) {
+                     ! str_starts_with($zipUrl, self::CODELOAD_HOST) &&
+                     ! str_starts_with($zipUrl, self::RELEASES_HOST))) {
                     $send('error', ['message' => __('Download URL not allowed.')]);
                     return;
                 }
@@ -146,15 +148,11 @@ class AdminUpdateController extends Controller
                 $zip->close();
                 $send('progress', ['key' => 'extract', 'percent' => 100]);
 
-                $entries = array_values(array_filter(
-                    scandir($tempDir),
-                    fn($e) => $e !== '.' && $e !== '..' && is_dir("$tempDir/$e")
-                ));
-                if (empty($entries)) {
+                $sourceDir = $this->resolveExtractedSourceDir($tempDir);
+                if ($sourceDir === null) {
                     $send('error', ['message' => __('Source directory not found in archive.')]);
                     return;
                 }
-                $sourceDir = $tempDir . '/' . $entries[0];
 
                 // 3. Copy files with progress
                 $send('step', ['key' => 'copy', 'label' => __('Copying files')]);
@@ -235,12 +233,13 @@ class AdminUpdateController extends Controller
             return back()->with('error', __('No update available, you are already on the latest version.'));
         }
 
-        $zipUrl = $info['latest']['zipball_url'] ?? null;
+        $zipUrl = $this->resolveDownloadUrl($info['latest']);
 
         // Security: only accept URLs from the official GitHub repo
         if (! $zipUrl ||
             (! str_starts_with($zipUrl, self::API_HOST) &&
-             ! str_starts_with($zipUrl, self::CODELOAD_HOST))) {
+             ! str_starts_with($zipUrl, self::CODELOAD_HOST) &&
+             ! str_starts_with($zipUrl, self::RELEASES_HOST))) {
             return back()->with('error', __('Unexpected download URL, update aborted for security.'));
         }
 
@@ -276,11 +275,9 @@ class AdminUpdateController extends Controller
             $zip->extractTo($tempDir);
             $zip->close();
 
-            // 3. Locate the single root directory inside the zip ----------------
-            $entries = array_filter(scandir($tempDir), fn($e) => $e !== '.' && $e !== '..' && is_dir("$tempDir/$e"));
-            $sourceDir = $tempDir . '/' . array_values($entries)[0] ?? null;
-
-            if (! $sourceDir || ! is_dir($sourceDir)) {
+            // 3. Locate the source directory inside the zip ---------------------
+            $sourceDir = $this->resolveExtractedSourceDir($tempDir);
+            if (! $sourceDir) {
                 return back()->with('error', __('Source directory not found in archive.'));
             }
             $log[] = __('Archive extracted to: :dir', ['dir' => basename($sourceDir)]);
@@ -637,6 +634,65 @@ class AdminUpdateController extends Controller
 
         // Nothing verified — fall back to plain `php` and hope PATH resolves it
         return $resolved = 'php';
+    }
+
+    /**
+     * Pick the download URL for a release.
+     *
+     * The release workflow generates files (e.g. a version migration) AFTER
+     * the tag is created, so GitHub's auto-generated `zipball_url` (which
+     * snapshots the tag commit) does NOT contain those post-tag artifacts.
+     * The workflow also uploads a ready-to-use `.zip` asset that DOES include
+     * them — we prefer that asset when present and fall back to zipball_url.
+     */
+    private function resolveDownloadUrl(?array $release): ?string
+    {
+        if (! is_array($release)) {
+            return null;
+        }
+
+        foreach ($release['assets'] ?? [] as $asset) {
+            $name = strtolower($asset['name'] ?? '');
+            $url  = $asset['browser_download_url'] ?? null;
+            if ($url && str_ends_with($name, '.zip') && str_starts_with($url, self::RELEASES_HOST)) {
+                return $url;
+            }
+        }
+
+        return $release['zipball_url'] ?? null;
+    }
+
+    /**
+     * Locate the Laravel project root inside an extracted update archive.
+     *
+     * The two archive layouts we accept:
+     *   - zipball_url (GitHub auto-generated): files live in <repo-sha>/
+     *   - uploaded asset (workflow `zip -r . ...`): files live at root
+     *
+     * We detect the layout by looking for a top-level `artisan` file.
+     */
+    private function resolveExtractedSourceDir(string $tempDir): ?string
+    {
+        // Flat asset zip: artisan is directly in $tempDir
+        if (is_file($tempDir . '/artisan')) {
+            return $tempDir;
+        }
+
+        // Zipball layout: a single subdirectory containing the project
+        $entries = array_values(array_filter(
+            (array) @scandir($tempDir),
+            fn($e) => $e !== '.' && $e !== '..' && is_dir($tempDir . '/' . $e)
+        ));
+
+        foreach ($entries as $entry) {
+            $candidate = $tempDir . '/' . $entry;
+            if (is_file($candidate . '/artisan')) {
+                return $candidate;
+            }
+        }
+
+        // Last resort: pick the first subdirectory (legacy behaviour)
+        return $entries ? $tempDir . '/' . $entries[0] : null;
     }
 
     private function getVersionInfo(): array
