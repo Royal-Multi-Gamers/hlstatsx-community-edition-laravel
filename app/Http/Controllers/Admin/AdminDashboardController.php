@@ -53,8 +53,10 @@ class AdminDashboardController extends Controller
 
     private function getInstalledVersion(): string
     {
+        // Use a dedicated key — the legacy Perl daemon overwrites `version`
+        // at every startup with its own hardcoded value (currently 2.5.9).
         $version = DB::table('hlstats_Options')
-            ->where('keyname', 'version')
+            ->where('keyname', 'webapp_version')
             ->value('value');
 
         return $version ? trim($version) : 'unknown';

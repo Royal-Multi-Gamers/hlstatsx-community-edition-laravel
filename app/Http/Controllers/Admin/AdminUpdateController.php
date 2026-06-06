@@ -455,7 +455,9 @@ class AdminUpdateController extends Controller
      */
     public static function fetchVersionInfo(): array
     {
-        $installed = DB::table('hlstats_Options')->where('keyname', 'version')->value('value') ?? 'unknown';
+        // Use a dedicated key — the legacy Perl daemon overwrites `version`
+        // at every startup with its own hardcoded value (currently 2.5.9).
+        $installed = DB::table('hlstats_Options')->where('keyname', 'webapp_version')->value('value') ?? 'unknown';
         $installed = trim($installed);
 
         $latest = Cache::get('admin_update_check');
