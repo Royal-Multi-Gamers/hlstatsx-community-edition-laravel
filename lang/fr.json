@@ -1,5 +1,10 @@
 {
     "General Statistics": "Statistiques générales",
+    "Custom max-players API (optional)": "API max-players personnalisée (optionnel)",
+    "For games without A2S_INFO support (e.g. BattleBit). The endpoint must return a JSON array of objects. Each server is matched by its name against the chosen field.": "Pour les jeux sans support A2S_INFO (ex. BattleBit). L'endpoint doit retourner un tableau JSON d'objets. Chaque serveur est identifié par son nom comparé au champ choisi.",
+    "Query URL": "URL de la requête",
+    "Name field (match server.name)": "Champ Nom (correspond à server.name)",
+    "Max players field": "Champ max players",
     ":players players and :clans clans ranked in :games games on :servers servers with :kills kills.": ":players joueurs et :clans clans classés dans :games jeux sur :servers serveurs avec :kills kills.",
     "Last Kill": "Dernier Kill",
     "All statistics are generated in real time. Event history is kept for each player's most recent :days days of activity.": "Toutes les statistiques sont générées en temps réel. L'historique des événements est conservé pour les :days derniers jours d'activité de chaque joueur.",

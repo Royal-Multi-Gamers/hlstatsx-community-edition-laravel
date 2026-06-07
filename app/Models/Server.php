@@ -18,6 +18,7 @@
 
 namespace App\Models;
 
+use App\Services\ServerStatusService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -75,5 +76,27 @@ class Server extends Model
     public function getFullAddressAttribute(): string
     {
         return !empty($this->publicaddress) ? $this->publicaddress : $this->address . ':' . $this->port;
+    }
+
+    /**
+     * Effective max_players, transparently overridden by the game's custom
+     * HTTP query API when one is configured (see Game.query_url).
+     *
+     * The Perl daemon resets this column to 0 for servers it cannot RCON
+     * (e.g. BattleBit, which speaks HTTP/JSON only) — so for those games
+     * we always prefer the value freshly fetched from the upstream API.
+     * The API result is itself cached 60s in ServerStatusService, so this
+     * accessor is cheap even when iterating large collections.
+     */
+    public function getMaxPlayersAttribute($value): int
+    {
+        $raw = (int) $value;
+        $apiValue = app(ServerStatusService::class)->fetchCustomMaxPlayers($this);
+
+        if ($apiValue !== null && $apiValue > 0) {
+            return $apiValue;
+        }
+
+        return $raw;
     }
 }

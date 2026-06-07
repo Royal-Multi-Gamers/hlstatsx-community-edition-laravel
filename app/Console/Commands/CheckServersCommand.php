@@ -39,17 +39,32 @@ class CheckServersCommand extends Command
 
         foreach ($servers as $server) {
             $status = $this->service->ping($server->address, (int) $server->port);
+            $updates = [];
 
             if ($status) {
                 $online++;
-                $server->update(['last_event' => now()->timestamp]);
+                $updates['last_event'] = now()->timestamp;
+            }
+
+            // Optional: refresh max_players from the game's custom HTTP API.
+            // Only overwrite when the API returned a strictly positive value,
+            // so a transient 0 (server down, missing field) cannot clobber a
+            // previously-known good capacity.
+            $max = $this->service->fetchCustomMaxPlayers($server);
+            if ($max !== null && $max > 0 && (int) $server->max_players !== $max) {
+                $updates['max_players'] = $max;
+            }
+
+            if (! empty($updates)) {
+                $server->update($updates);
             }
 
             $this->line(sprintf(
-                '%s:%d — %s',
+                '%s:%d — %s%s',
                 $server->address,
                 $server->port,
-                $status ? '<info>online</info>' : '<comment>offline</comment>'
+                $status ? '<info>online</info>' : '<comment>offline</comment>',
+                isset($updates['max_players']) ? " (max_players={$updates['max_players']})" : ''
             ));
         }
 

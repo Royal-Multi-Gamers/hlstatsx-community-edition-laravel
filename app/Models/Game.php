@@ -34,6 +34,7 @@ class Game extends Model
         'code', 'name', 'realgame', 'hidden', 'website',
         'defaultSkill', 'killSkillBonus', 'deathSkillPenalty',
         'suicidePenalty', 'teamKillPenalty', 'minPlayers', 'headShotBonus',
+        'query_url', 'query_match_field', 'query_max_players_field',
     ];
 
     public function servers(): HasMany

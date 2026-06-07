@@ -18,7 +18,11 @@
 
 namespace App\Services;
 
+use App\Models\Game;
 use App\Models\Server;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ServerStatusService
 {
@@ -94,6 +98,96 @@ class ServerStatusService
         Server::visible()->each(function (Server $server) {
             $online = $this->ping($server->address, (int) $server->port);
             $server->update(['last_event' => $online ? now()->timestamp : $server->last_event]);
+        });
+    }
+
+    /**
+     * Fetch the max_players value for a server through its game's custom
+     * HTTP JSON API, when configured.
+     *
+     * The endpoint must return either a JSON array of objects or an object
+     * whose first array value contains them. Servers are matched by their
+     * `name` against the value of `Game.query_match_field`.
+     *
+     * Returns null when the game has no custom API, the request fails, or
+     * no entry matches the server name.
+     */
+    public function fetchCustomMaxPlayers(Server $server): ?int
+    {
+        // The `game` column name collides with the `game()` relation:
+        // accessing $server->game returns the string code, not the model.
+        // Resolve the Game explicitly (cached per code for the request).
+        static $gameCache = [];
+        $code = (string) $server->getAttribute('game');
+        if ($code === '') {
+            return null;
+        }
+        $game = $gameCache[$code] ??= Game::find($code);
+
+        if (! $game || ! $game->query_url || ! $game->query_match_field || ! $game->query_max_players_field) {
+            return null;
+        }
+
+        $payload = $this->fetchCustomApiPayload($game->query_url);
+        if ($payload === null) {
+            return null;
+        }
+
+        $matchField = $game->query_match_field;
+        $maxField   = $game->query_max_players_field;
+        $needle     = (string) $server->name;
+
+        foreach ($payload as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+            if (($entry[$matchField] ?? null) === $needle && isset($entry[$maxField])) {
+                return (int) $entry[$maxField];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetch and decode a custom-API endpoint. Cached for 60s per URL to
+     * avoid hammering the upstream when several servers share the same
+     * endpoint (e.g. BattleBit's GetServerList).
+     */
+    private function fetchCustomApiPayload(string $url): ?array
+    {
+        return Cache::remember('server_query_api:' . sha1($url), 60, function () use ($url) {
+            try {
+                $response = Http::timeout(8)
+                    ->withHeaders(['User-Agent' => 'hlstatsx-ce-server-query'])
+                    ->get($url);
+            } catch (\Throwable $e) {
+                Log::warning("Custom server-query API failed for {$url}: {$e->getMessage()}");
+                return null;
+            }
+
+            if (! $response->successful()) {
+                Log::warning("Custom server-query API HTTP {$response->status()} for {$url}");
+                return null;
+            }
+
+            $data = $response->json();
+            if (! is_array($data)) {
+                return null;
+            }
+
+            // If the API wraps the list in an envelope object, unwrap the
+            // first array value (handles {data: [...]}, {servers: [...]}, …)
+            if (! array_is_list($data)) {
+                foreach ($data as $value) {
+                    if (is_array($value) && array_is_list($value)) {
+                        return $value;
+                    }
+                }
+                return null;
+            }
+
+            return $data;
         });
     }
 }

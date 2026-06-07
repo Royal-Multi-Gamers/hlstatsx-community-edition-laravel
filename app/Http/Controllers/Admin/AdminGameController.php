@@ -39,9 +39,12 @@ class AdminGameController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'code'     => ['required', 'string', 'max:32', 'unique:hlstats_Games,code'],
-            'name'     => ['required', 'string', 'max:128'],
-            'realgame' => ['nullable', 'string', 'max:32'],
+            'code'                    => ['required', 'string', 'max:32', 'unique:hlstats_Games,code'],
+            'name'                    => ['required', 'string', 'max:128'],
+            'realgame'                => ['nullable', 'string', 'max:32'],
+            'query_url'               => ['nullable', 'url', 'max:255'],
+            'query_match_field'       => ['nullable', 'string', 'max:64', 'required_with:query_url'],
+            'query_max_players_field' => ['nullable', 'string', 'max:64', 'required_with:query_url'],
         ]);
         $data['hidden'] = $request->boolean('hidden') ? '1' : '0';
         Game::create($data);
@@ -58,8 +61,11 @@ class AdminGameController extends Controller
     {
         $game = Game::findOrFail($code);
         $data = $request->validate([
-            'name'       => ['required', 'string', 'max:128'],
-            'realgame'   => ['nullable', 'string', 'max:32'],
+            'name'                    => ['required', 'string', 'max:128'],
+            'realgame'                => ['nullable', 'string', 'max:32'],
+            'query_url'               => ['nullable', 'url', 'max:255'],
+            'query_match_field'       => ['nullable', 'string', 'max:64', 'required_with:query_url'],
+            'query_max_players_field' => ['nullable', 'string', 'max:64', 'required_with:query_url'],
         ]);
         $data['hidden'] = $request->boolean('hidden') ? '1' : '0';
         $game->update($data);
@@ -179,7 +185,8 @@ class AdminGameController extends Controller
                     'game'               => $newCode,
                     'code'               => $r->code,
                     'name'               => $r->name,
-                    'hidden'             => $r->hidden,
+                    // ENUM('0','1') NOT NULL — coerce empty/null to '0'
+                    'hidden'             => in_array((string) $r->hidden, ['0', '1'], true) ? (string) $r->hidden : '0',
                     'playerlist_bgcolor' => $r->playerlist_bgcolor,
                     'playerlist_color'   => $r->playerlist_color,
                     'playerlist_index'   => $r->playerlist_index,
@@ -191,7 +198,7 @@ class AdminGameController extends Controller
                     'game'   => $newCode,
                     'code'   => $r->code,
                     'name'   => $r->name,
-                    'hidden' => $r->hidden,
+                    'hidden' => in_array((string) $r->hidden, ['0', '1'], true) ? (string) $r->hidden : '0',
                     'picked' => 0,
                     'kills'  => 0,
                     'deaths' => 0,
@@ -206,10 +213,11 @@ class AdminGameController extends Controller
                     'reward_team'             => $r->reward_team,
                     'team'                    => $r->team,
                     'description'             => $r->description,
-                    'for_PlayerActions'       => $r->for_PlayerActions,
-                    'for_PlayerPlayerActions' => $r->for_PlayerPlayerActions,
-                    'for_TeamActions'         => $r->for_TeamActions,
-                    'for_WorldActions'        => $r->for_WorldActions,
+                    // All four are ENUM('0','1') NOT NULL
+                    'for_PlayerActions'       => in_array((string) $r->for_PlayerActions, ['0', '1'], true) ? (string) $r->for_PlayerActions : '0',
+                    'for_PlayerPlayerActions' => in_array((string) $r->for_PlayerPlayerActions, ['0', '1'], true) ? (string) $r->for_PlayerPlayerActions : '0',
+                    'for_TeamActions'         => in_array((string) $r->for_TeamActions, ['0', '1'], true) ? (string) $r->for_TeamActions : '0',
+                    'for_WorldActions'        => in_array((string) $r->for_WorldActions, ['0', '1'], true) ? (string) $r->for_WorldActions : '0',
                     'count'                   => 0,
                 ]));
 
