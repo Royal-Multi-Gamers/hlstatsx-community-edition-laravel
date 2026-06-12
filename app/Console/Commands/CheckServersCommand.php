@@ -38,7 +38,10 @@ class CheckServersCommand extends Command
         $online  = 0;
 
         foreach ($servers as $server) {
-            $status = $this->service->ping($server->address, (int) $server->port);
+            // Games with a custom HTTP status API (e.g. BattleBit) don't
+            // speak A2S_INFO, so prefer their live-server list when configured.
+            $status = $this->service->isOnlineViaCustomApi($server)
+                ?? $this->service->ping($server->address, (int) $server->port);
             $updates = [];
 
             if ($status) {

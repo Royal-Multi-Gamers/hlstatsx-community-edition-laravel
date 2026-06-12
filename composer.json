@@ -8,19 +8,19 @@
     "require": {
         "php": "^8.3",
         "geoip2/geoip2": "^3.3",
-        "laravel/framework": "^13.8",
+        "laravel/framework": "^13.15",
         "laravel/tinker": "^3.0",
-        "predis/predis": "^3.4",
+        "predis/predis": "^3.5",
         "stevebauman/location": "^7.6"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
+        "fakerphp/faker": "^1.24",
         "laravel/breeze": "^2.4",
-        "laravel/pail": "^1.2.5",
-        "laravel/pao": "^1.0.6",
-        "laravel/pint": "^1.27",
+        "laravel/pail": "^1.2.7",
+        "laravel/pao": "^1.1",
+        "laravel/pint": "^1.29",
         "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
+        "nunomaduro/collision": "^8.9",
         "pestphp/pest": "^4.7",
         "pestphp/pest-plugin-laravel": "^4.1"
     },

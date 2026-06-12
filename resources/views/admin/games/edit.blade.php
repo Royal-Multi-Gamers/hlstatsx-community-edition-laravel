@@ -19,9 +19,9 @@
         </div>
 
         <fieldset style="border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:14px 16px; margin-bottom:16px;">
-            <legend class="hlx-muted" style="padding:0 6px; font-size:var(--font-size-sm);">{{ __('Custom max-players API (optional)') }}</legend>
+            <legend class="hlx-muted" style="padding:0 6px; font-size:var(--font-size-sm);">{{ __('Custom status / max-players API (optional)') }}</legend>
             <p class="hlx-muted" style="margin:0 0 12px; font-size:var(--font-size-sm); line-height:1.4;">
-                {{ __('For games without A2S_INFO support (e.g. BattleBit). The endpoint must return a JSON array of objects. Each server is matched by its name against the chosen field.') }}
+                {{ __('For games without A2S_INFO support (e.g. BattleBit). The endpoint must return a JSON array of objects. Each server is matched by its name against the chosen field. A matching entry also marks the server online/offline on the map.') }}
             </p>
             <div style="margin-bottom:12px;">
                 <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">{{ __('Query URL') }}</label>

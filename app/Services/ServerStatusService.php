@@ -114,16 +114,7 @@ class ServerStatusService
      */
     public function fetchCustomMaxPlayers(Server $server): ?int
     {
-        // The `game` column name collides with the `game()` relation:
-        // accessing $server->game returns the string code, not the model.
-        // Resolve the Game explicitly (cached per code for the request).
-        static $gameCache = [];
-        $code = (string) $server->getAttribute('game');
-        if ($code === '') {
-            return null;
-        }
-        $game = $gameCache[$code] ??= Game::find($code);
-
+        $game = $this->resolveGame($server);
         if (! $game || ! $game->query_url || ! $game->query_match_field || ! $game->query_max_players_field) {
             return null;
         }
@@ -133,16 +124,63 @@ class ServerStatusService
             return null;
         }
 
-        $matchField = $game->query_match_field;
-        $maxField   = $game->query_max_players_field;
-        $needle     = (string) $server->name;
+        $entry = $this->matchEntry($payload, $game->query_match_field, (string) $server->name);
+        if ($entry === null || ! isset($entry[$game->query_max_players_field])) {
+            return null;
+        }
 
+        return (int) $entry[$game->query_max_players_field];
+    }
+
+    /**
+     * Determine online status for a server through its game's custom HTTP
+     * JSON API, when configured (see Game.query_url / query_match_field).
+     *
+     * The same endpoint used for `fetchCustomMaxPlayers` is treated as the
+     * authoritative live-server list: a server is online if it appears in
+     * the response, offline otherwise (e.g. BattleBit's GetServerList).
+     *
+     * Returns null when the game has no custom API configured, so the
+     * caller can fall back to the A2S_INFO ping.
+     */
+    public function isOnlineViaCustomApi(Server $server): ?bool
+    {
+        $game = $this->resolveGame($server);
+        if (! $game || ! $game->query_url || ! $game->query_match_field) {
+            return null;
+        }
+
+        $payload = $this->fetchCustomApiPayload($game->query_url) ?? [];
+
+        return $this->matchEntry($payload, $game->query_match_field, (string) $server->name) !== null;
+    }
+
+    /**
+     * Resolve the Game for a server, cached per code for the request.
+     *
+     * The `game` column name collides with the `game()` relation:
+     * accessing $server->game returns the string code, not the model.
+     */
+    private function resolveGame(Server $server): ?Game
+    {
+        static $gameCache = [];
+        $code = (string) $server->getAttribute('game');
+        if ($code === '') {
+            return null;
+        }
+
+        return $gameCache[$code] ??= Game::find($code);
+    }
+
+    /**
+     * Find the first entry in a custom-API payload whose `$matchField`
+     * value equals `$needle` (the server name).
+     */
+    private function matchEntry(array $payload, string $matchField, string $needle): ?array
+    {
         foreach ($payload as $entry) {
-            if (! is_array($entry)) {
-                continue;
-            }
-            if (($entry[$matchField] ?? null) === $needle && isset($entry[$maxField])) {
-                return (int) $entry[$maxField];
+            if (is_array($entry) && ($entry[$matchField] ?? null) === $needle) {
+                return $entry;
             }
         }
 

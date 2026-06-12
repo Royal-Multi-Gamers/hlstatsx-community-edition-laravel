@@ -89,9 +89,9 @@ class DebugCustomQueryCommand extends Command
 
             if ($match) {
                 $max = $match[$game->query_max_players_field] ?? '?';
-                $this->line("  <info>✔</info> [{$server->serverId}] " . mb_strimwidth($needle, 0, 50, '…') . " → max_players = {$max}");
+                $this->line("  <info>✔</info> [{$server->serverId}] " . mb_strimwidth($needle, 0, 50, '…') . " → online, max_players = {$max}");
             } else {
-                $this->line("  <error>✘</error> [{$server->serverId}] no match for: " . mb_strimwidth($needle, 0, 80, '…'));
+                $this->line("  <error>✘</error> [{$server->serverId}] " . mb_strimwidth($needle, 0, 50, '…') . " → offline (no match for this server)");
             }
         }
 
