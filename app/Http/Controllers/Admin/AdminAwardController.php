@@ -27,7 +27,7 @@ class AdminAwardController extends Controller
 {
     public function index(Request $request)
     {
-        $games  = Game::orderBy('name')->get();
+        $games  = Game::ordered()->get();
         $game   = $request->input('game', $games->first()?->code);
         $type   = $request->input('type', 'W');
         $awards = Award::where('game', $game)->where('awardType', $type)->orderBy('name')->get();
@@ -36,7 +36,7 @@ class AdminAwardController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         $selectedType = $request->input('type', 'W');
         return view('admin.awards.create', compact('games', 'selectedGame', 'selectedType'));
@@ -58,7 +58,7 @@ class AdminAwardController extends Controller
     public function edit(int $id)
     {
         $award = Award::findOrFail($id);
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.awards.edit', compact('award', 'games'));
     }
 
@@ -85,3 +85,4 @@ class AdminAwardController extends Controller
         return redirect()->route('admin.awards.index', ['game' => $game, 'type' => $type])->with('success', 'Award deleted.');
     }
 }
+

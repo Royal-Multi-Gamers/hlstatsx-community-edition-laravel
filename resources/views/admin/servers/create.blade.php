@@ -1,7 +1,7 @@
 <x-layouts.admin title="Add Server">
     <form method="POST" action="{{ route('admin.servers.store') }}" style="max-width:480px;">
         @csrf
-        @foreach(['name' => 'Server Name', 'address' => 'IP Address', 'port' => 'Port', 'publicaddress' => 'Public Address (optional)', 'rcon' => 'RCON Password (optional)'] as $field => $label)
+        @foreach(['name' => 'Server Name', 'address' => 'IP Address', 'port' => 'Port', 'publicaddress' => 'Public Address (optional)', 'rcon_password' => 'RCON Password (optional)'] as $field => $label)
             <div style="margin-bottom:14px;">
                 <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">{{ $label }}</label>
                 <input type="text" name="{{ $field }}" value="{{ old($field) }}"

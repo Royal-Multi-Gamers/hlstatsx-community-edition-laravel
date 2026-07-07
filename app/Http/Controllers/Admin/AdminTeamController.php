@@ -27,7 +27,7 @@ class AdminTeamController extends Controller
 {
     public function index(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $game  = $request->input('game', $games->first()?->code);
         $teams = Team::where('game', $game)->orderBy('name')->get();
         return view('admin.teams.index', compact('games', 'game', 'teams'));
@@ -35,7 +35,7 @@ class AdminTeamController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         return view('admin.teams.create', compact('games', 'selectedGame'));
     }
@@ -59,7 +59,7 @@ class AdminTeamController extends Controller
     public function edit(int $id)
     {
         $team  = Team::findOrFail($id);
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.teams.edit', compact('team', 'games'));
     }
 
@@ -87,3 +87,4 @@ class AdminTeamController extends Controller
         return redirect()->route('admin.teams.index', ['game' => $game])->with('success', 'Team deleted.');
     }
 }
+

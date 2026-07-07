@@ -1,7 +1,7 @@
 <x-layouts.admin :title="'Edit Server: ' . $server->name">
     <form method="POST" action="{{ route('admin.servers.update', $server->serverId) }}" style="max-width:480px;">
         @csrf @method('PUT')
-        @foreach(['name' => 'Server Name', 'address' => 'IP Address', 'port' => 'Port', 'publicaddress' => 'Public Address', 'rcon' => 'RCON Password'] as $field => $label)
+        @foreach(['name' => 'Server Name', 'address' => 'IP Address', 'port' => 'Port', 'publicaddress' => 'Public Address', 'rcon_password' => 'RCON Password'] as $field => $label)
             <div style="margin-bottom:14px;">
                 <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">{{ $label }}</label>
                 <input type="text" name="{{ $field }}" value="{{ old($field, $server->$field) }}"

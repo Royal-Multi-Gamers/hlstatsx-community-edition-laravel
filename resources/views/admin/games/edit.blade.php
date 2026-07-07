@@ -11,6 +11,12 @@
             <input type="text" name="realgame" value="{{ old('realgame', $game->realgame) }}"
                    style="width:100%; box-sizing:border-box; background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:6px 10px; font-size:var(--font-size-sm);">
         </div>
+        <div style="margin-bottom:14px;">
+            <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">Display Order</label>
+            <input type="number" name="sortorder" value="{{ old('sortorder', (int) ($game->sortorder ?? 0)) }}" min="0" max="255"
+                   style="width:100%; box-sizing:border-box; background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:6px 10px; font-size:var(--font-size-sm);">
+            @error('sortorder') <div style="color:var(--status-offline); font-size:var(--font-size-sm); margin-top:4px;">{{ $message }}</div> @enderror
+        </div>
         <div style="margin-bottom:16px;">
             <label style="display:flex; align-items:center; gap:8px; color:var(--text-secondary); font-size:var(--font-size-sm); cursor:pointer;">
                 <input type="checkbox" name="hidden" value="1" {{ old('hidden', $game->hidden) == '1' ? 'checked' : '' }}>

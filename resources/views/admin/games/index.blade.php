@@ -5,11 +5,12 @@
     <div style="border:1px solid var(--border); border-radius:var(--border-radius-md); overflow:hidden;">
         <table class="hlx-table">
             <thead>
-                <tr><th>Code</th><th>Name</th><th>Hidden</th><th>Actions</th></tr>
+                <tr><th>Order</th><th>Code</th><th>Name</th><th>Hidden</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 @forelse($games as $game)
                     <tr>
+                        <td class="hlx-muted">{{ (int) ($game->sortorder ?? 0) }}</td>
                         <td class="hlx-muted" style="font-family:var(--font-family-mono);">{{ $game->code }}</td>
                         <td class="hlx-text">{{ $game->name }}</td>
                         <td class="hlx-muted">{{ $game->hidden == '1' ? 'Yes' : 'No' }}</td>
@@ -24,7 +25,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="hlx-muted" style="text-align:center; padding:20px;">No games found.</td></tr>
+                    <tr><td colspan="5" class="hlx-muted" style="text-align:center; padding:20px;">No games found.</td></tr>
                 @endforelse
             </tbody>
         </table>

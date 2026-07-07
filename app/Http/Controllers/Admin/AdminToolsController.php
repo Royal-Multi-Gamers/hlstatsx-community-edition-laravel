@@ -27,7 +27,7 @@ class AdminToolsController extends Controller
 {
     public function index()
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.tools.index', compact('games'));
     }
 
@@ -109,7 +109,7 @@ class AdminToolsController extends Controller
         $ops  = $request->input('ops', []);
 
         if (empty($ops)) {
-            return redirect()->route('admin.tools.index')->with('error', 'Aucune opération sélectionnée.');
+            return redirect()->route('admin.tools.index')->with('error', 'Aucune opÃ©ration sÃ©lectionnÃ©e.');
         }
 
         $gameFilter = $game !== '' ? $game : null;
@@ -140,7 +140,7 @@ class AdminToolsController extends Controller
             $q->update(['d_winner_id' => null, 'd_winner_count' => null, 'g_winner_id' => null, 'g_winner_count' => null]);
             $truncOrDelete('hlstats_Players_Awards', $gameFilter ? 'game' : null);
             $truncOrDelete('hlstats_Players_Ribbons', $gameFilter ? 'game' : null);
-            $done[] = 'Récompenses';
+            $done[] = 'RÃ©compenses';
         }
         if (in_array('sessions', $ops)) {
             $truncOrDelete('hlstats_Players_History', 'game');
@@ -204,7 +204,7 @@ class AdminToolsController extends Controller
             $q = DB::table('hlstats_Roles');
             if ($gameFilter) $q->where('game', $gameFilter);
             $q->update(['picked' => 0, 'kills' => 0, 'deaths' => 0]);
-            $done[] = 'Compteurs rôles';
+            $done[] = 'Compteurs rÃ´les';
         }
 
         // Events
@@ -262,7 +262,7 @@ class AdminToolsController extends Controller
                 DB::table('hlstats_Players')->where('game', $gameFilter)->delete();
                 DB::table('hlstats_Clans')->where('game', $gameFilter)->delete();
             }
-            $done[] = 'Joueurs & Clans supprimés';
+            $done[] = 'Joueurs & Clans supprimÃ©s';
         }
 
         $scope = $gameFilter ? "jeu [{$gameFilter}]" : 'toute la base';
@@ -291,3 +291,4 @@ class AdminToolsController extends Controller
             ->with('success', "Collations converties en {$charset}/{$collation} sur {$done} tables.");
     }
 }
+

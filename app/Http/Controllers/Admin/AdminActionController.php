@@ -27,7 +27,7 @@ class AdminActionController extends Controller
 {
     public function index(Request $request)
     {
-        $games   = Game::orderBy('name')->get();
+        $games   = Game::ordered()->get();
         $game    = $request->input('game', $games->first()?->code);
         $actions = Action::where('game', $game)->orderBy('code')->get();
         return view('admin.actions.index', compact('games', 'game', 'actions'));
@@ -35,7 +35,7 @@ class AdminActionController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         return view('admin.actions.create', compact('games', 'selectedGame'));
     }
@@ -61,7 +61,7 @@ class AdminActionController extends Controller
     public function edit(int $id)
     {
         $action = Action::findOrFail($id);
-        $games  = Game::orderBy('name')->get();
+        $games  = Game::ordered()->get();
         return view('admin.actions.edit', compact('action', 'games'));
     }
 
@@ -92,3 +92,4 @@ class AdminActionController extends Controller
         return redirect()->route('admin.actions.index', ['game' => $game])->with('success', 'Action deleted.');
     }
 }
+

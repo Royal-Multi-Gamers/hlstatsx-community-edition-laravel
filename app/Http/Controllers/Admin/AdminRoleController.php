@@ -27,7 +27,7 @@ class AdminRoleController extends Controller
 {
     public function index(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $game  = $request->input('game', $games->first()?->code);
         $roles = Role::where('game', $game)->orderBy('name')->get();
         return view('admin.roles.index', compact('games', 'game', 'roles'));
@@ -35,7 +35,7 @@ class AdminRoleController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         return view('admin.roles.create', compact('games', 'selectedGame'));
     }
@@ -56,7 +56,7 @@ class AdminRoleController extends Controller
     public function edit(int $id)
     {
         $role  = Role::findOrFail($id);
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.roles.edit', compact('role', 'games'));
     }
 
@@ -81,3 +81,4 @@ class AdminRoleController extends Controller
         return redirect()->route('admin.roles.index', ['game' => $game])->with('success', 'Role deleted.');
     }
 }
+

@@ -27,7 +27,7 @@ class AdminRankController extends Controller
 {
     public function index(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $game  = $request->input('game', $games->first()?->code);
         $ranks = Rank::where('game', $game)->orderBy('minKills')->get();
         return view('admin.ranks.index', compact('games', 'game', 'ranks'));
@@ -35,7 +35,7 @@ class AdminRankController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         return view('admin.ranks.create', compact('games', 'selectedGame'));
     }
@@ -56,7 +56,7 @@ class AdminRankController extends Controller
     public function edit(int $id)
     {
         $rank  = Rank::findOrFail($id);
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.ranks.edit', compact('rank', 'games'));
     }
 
@@ -82,3 +82,4 @@ class AdminRankController extends Controller
         return redirect()->route('admin.ranks.index', ['game' => $game])->with('success', 'Rank deleted.');
     }
 }
+

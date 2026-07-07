@@ -27,7 +27,7 @@ class AdminRibbonController extends Controller
 {
     public function index(Request $request)
     {
-        $games   = Game::orderBy('name')->get();
+        $games   = Game::ordered()->get();
         $game    = $request->input('game', $games->first()?->code);
         $ribbons = Ribbon::where('game', $game)->orderBy('ribbonName')->get();
         return view('admin.ribbons.index', compact('games', 'game', 'ribbons'));
@@ -35,7 +35,7 @@ class AdminRibbonController extends Controller
 
     public function create(Request $request)
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         $selectedGame = $request->input('game', $games->first()?->code);
         return view('admin.ribbons.create', compact('games', 'selectedGame'));
     }
@@ -57,7 +57,7 @@ class AdminRibbonController extends Controller
     public function edit(int $id)
     {
         $ribbon = Ribbon::findOrFail($id);
-        $games  = Game::orderBy('name')->get();
+        $games  = Game::ordered()->get();
         return view('admin.ribbons.edit', compact('ribbon', 'games'));
     }
 
@@ -84,3 +84,4 @@ class AdminRibbonController extends Controller
         return redirect()->route('admin.ribbons.index', ['game' => $game])->with('success', 'Ribbon deleted.');
     }
 }
+

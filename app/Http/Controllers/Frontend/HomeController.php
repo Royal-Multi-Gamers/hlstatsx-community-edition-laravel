@@ -39,6 +39,7 @@ class HomeController extends Controller
         $globalStats = $this->stats->getGlobalStats();
 
         $games = Game::visible()
+            ->ordered()
             ->with(['servers' => fn($q) => $q->visible()])
             ->get();
 

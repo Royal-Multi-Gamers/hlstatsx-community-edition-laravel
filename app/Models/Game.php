@@ -21,6 +21,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Game extends Model
 {
@@ -32,6 +33,7 @@ class Game extends Model
 
     protected $fillable = [
         'code', 'name', 'realgame', 'hidden', 'website',
+        'sortorder',
         'defaultSkill', 'killSkillBonus', 'deathSkillPenalty',
         'suicidePenalty', 'teamKillPenalty', 'minPlayers', 'headShotBonus',
         'query_url', 'query_match_field', 'query_max_players_field',
@@ -61,5 +63,22 @@ class Game extends Model
     {
         // hidden is ENUM('0','1'); use string comparison
         return $query->where('hidden', '0');
+    }
+
+    public function scopeOrdered(Builder $query): Builder
+    {
+        static $hasSortOrder = null;
+
+        if ($hasSortOrder === null) {
+            $hasSortOrder = Schema::hasColumn($this->getTable(), 'sortorder');
+        }
+
+        if ($hasSortOrder) {
+            $query->orderBy('sortorder');
+        }
+
+        return $query
+            ->orderBy('realgame')
+            ->orderBy('name');
     }
 }

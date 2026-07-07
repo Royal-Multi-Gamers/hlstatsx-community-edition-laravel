@@ -27,7 +27,7 @@ class AdminGameController extends Controller
 {
     public function index()
     {
-        $games = Game::orderBy('name')->get();
+        $games = Game::ordered()->get();
         return view('admin.games.index', compact('games'));
     }
 
@@ -42,11 +42,13 @@ class AdminGameController extends Controller
             'code'                    => ['required', 'string', 'max:32', 'unique:hlstats_Games,code'],
             'name'                    => ['required', 'string', 'max:128'],
             'realgame'                => ['nullable', 'string', 'max:32'],
+            'sortorder'               => ['nullable', 'integer', 'min:0', 'max:255'],
             'query_url'               => ['nullable', 'url', 'max:255'],
             'query_match_field'       => ['nullable', 'string', 'max:64', 'required_with:query_url'],
             'query_max_players_field' => ['nullable', 'string', 'max:64', 'required_with:query_url'],
         ]);
         $data['hidden'] = $request->boolean('hidden') ? '1' : '0';
+        $data['sortorder'] = (int) ($data['sortorder'] ?? 0);
         Game::create($data);
         return redirect()->route('admin.games.index')->with('success', 'Game created.');
     }
@@ -63,11 +65,13 @@ class AdminGameController extends Controller
         $data = $request->validate([
             'name'                    => ['required', 'string', 'max:128'],
             'realgame'                => ['nullable', 'string', 'max:32'],
+            'sortorder'               => ['nullable', 'integer', 'min:0', 'max:255'],
             'query_url'               => ['nullable', 'url', 'max:255'],
             'query_match_field'       => ['nullable', 'string', 'max:64', 'required_with:query_url'],
             'query_max_players_field' => ['nullable', 'string', 'max:64', 'required_with:query_url'],
         ]);
         $data['hidden'] = $request->boolean('hidden') ? '1' : '0';
+        $data['sortorder'] = (int) ($data['sortorder'] ?? 0);
         $game->update($data);
         return redirect()->route('admin.games.index')->with('success', 'Game updated.');
     }
@@ -156,6 +160,7 @@ class AdminGameController extends Controller
                 'name'     => $data['name'],
                 'realgame' => $source->realgame,
                 'hidden'   => $source->hidden,
+                'sortorder' => $source->sortorder,
             ]);
 
             // Weapons
@@ -185,7 +190,7 @@ class AdminGameController extends Controller
                     'game'               => $newCode,
                     'code'               => $r->code,
                     'name'               => $r->name,
-                    // ENUM('0','1') NOT NULL — coerce empty/null to '0'
+                    // ENUM('0','1') NOT NULL â€” coerce empty/null to '0'
                     'hidden'             => in_array((string) $r->hidden, ['0', '1'], true) ? (string) $r->hidden : '0',
                     'playerlist_bgcolor' => $r->playerlist_bgcolor,
                     'playerlist_color'   => $r->playerlist_color,
@@ -256,6 +261,7 @@ class AdminGameController extends Controller
         });
 
         return redirect()->route('admin.games.index')
-            ->with('success', "Jeu [{$source->code}] dupliqué en [{$data['code']}] avec succès.");
+            ->with('success', "Jeu [{$source->code}] dupliquÃ© en [{$data['code']}] avec succÃ¨s.");
     }
 }
+

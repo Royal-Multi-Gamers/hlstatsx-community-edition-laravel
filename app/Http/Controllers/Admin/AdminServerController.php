@@ -34,7 +34,7 @@ class AdminServerController extends Controller
 
     public function create()
     {
-        $games = Game::visible()->orderBy('name')->get();
+        $games = Game::visible()->ordered()->get();
         $mods  = DB::table('hlstats_Mods_Supported')->orderBy('name')->get();
         return view('admin.servers.create', compact('games', 'mods'));
     }
@@ -48,7 +48,7 @@ class AdminServerController extends Controller
 
             $mod = $request->input('game_mod', '');
 
-            // 1. Copie des Mods_Defaults pour l'admin mod sélectionné
+            // 1. Copie des Mods_Defaults pour l'admin mod sÃ©lectionnÃ©
             DB::table('hlstats_Mods_Defaults')
                 ->where('code', $mod)
                 ->get()
@@ -58,7 +58,7 @@ class AdminServerController extends Controller
                     'value'     => $r->value,
                 ]));
 
-            // 2. Paramètre Mod
+            // 2. ParamÃ¨tre Mod
             DB::table('hlstats_Servers_Config')->insertOrIgnore([
                 'serverId'  => $server->serverId,
                 'parameter' => 'Mod',
@@ -104,13 +104,13 @@ class AdminServerController extends Controller
 
         return redirect()
             ->route('admin.server-config.index', ['server_id' => $server->serverId])
-            ->with('success', 'Server created. Vérifiez et ajustez la configuration ci-dessous.');
+            ->with('success', 'Server created. VÃ©rifiez et ajustez la configuration ci-dessous.');
     }
 
     public function edit(int $id)
     {
         $server = Server::findOrFail($id);
-        $games  = Game::visible()->orderBy('name')->get();
+        $games  = Game::visible()->ordered()->get();
         $mods   = DB::table('hlstats_Mods_Supported')->orderBy('name')->get();
         $currentMod = DB::table('hlstats_Servers_Config')
             ->where('serverId', $id)
@@ -125,7 +125,7 @@ class AdminServerController extends Controller
         $data   = $this->validated($request);
         $server->update($data);
 
-        // Met à jour le paramètre Mod si fourni
+        // Met Ã  jour le paramÃ¨tre Mod si fourni
         $mod = $request->input('game_mod');
         if ($mod !== null) {
             DB::table('hlstats_Servers_Config')
@@ -177,7 +177,8 @@ class AdminServerController extends Controller
             'port'       => ['required', 'integer', 'min:1', 'max:65535'],
             'game'       => ['required', 'string', 'max:32'],
             'publicaddress' => ['nullable', 'string', 'max:64'],
-            'rcon'       => ['nullable', 'string', 'max:64'],
+            'rcon_password' => ['nullable', 'string', 'max:128'],
         ]);
     }
 }
+
