@@ -20,6 +20,7 @@ class InstallController extends Controller
     // -------------------------------------------------------------------------
     public function step1()
     {
+        $this->ensureRuntimeDirectories();
         return view('install.step1');
     }
 
@@ -73,6 +74,8 @@ class InstallController extends Controller
     // -------------------------------------------------------------------------
     public function step2()
     {
+        $this->ensureRuntimeDirectories();
+
         // Check if tables already exist
         try {
             $tablesExist = Schema::hasTable('hlstats_Games');
@@ -132,6 +135,7 @@ class InstallController extends Controller
     // -------------------------------------------------------------------------
     public function step3()
     {
+        $this->ensureRuntimeDirectories();
         return view('install.step3');
     }
 
@@ -154,6 +158,7 @@ class InstallController extends Controller
     // -------------------------------------------------------------------------
     public function step4()
     {
+        $this->ensureRuntimeDirectories();
         return view('install.step4');
     }
 
@@ -243,6 +248,26 @@ class InstallController extends Controller
             ]);
             DB::purge('mysql');
             DB::reconnect('mysql');
+        }
+    }
+
+    private function ensureRuntimeDirectories(): void
+    {
+        $paths = [
+            storage_path('framework'),
+            storage_path('framework/sessions'),
+            storage_path('framework/views'),
+            storage_path('framework/cache'),
+            storage_path('framework/cache/data'),
+            storage_path('framework/testing'),
+            storage_path('logs'),
+            base_path('bootstrap/cache'),
+        ];
+
+        foreach ($paths as $path) {
+            if (!is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
         }
     }
 }
