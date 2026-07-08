@@ -15,12 +15,15 @@ use App\Http\Controllers\Frontend\MapController;
 use App\Http\Controllers\Frontend\PlayerController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\ServerController;
+use App\Http\Controllers\Frontend\SteamAuthController;
 use App\Http\Controllers\Frontend\RoleController;
 use App\Http\Controllers\Frontend\IngameController;
+use App\Http\Controllers\Frontend\AccountController;
 use App\Http\Controllers\Frontend\WeaponController;
 use App\Http\Controllers\Frontend\VoiceCommController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Middleware\EnsureSteamUserAuthenticated;
 use Illuminate\Support\Facades\Route;
 
 // ── Installation wizard (accessible uniquement si APP_INSTALLED != true) ──
@@ -43,6 +46,17 @@ Route::prefix('install')->name('install.')->group(function () {
 
 // Language switch
 Route::post('/language/{locale}', [LocaleController::class, 'switch'])->name('language.switch');
+
+// Steam user space
+Route::get('/auth/steam', [SteamAuthController::class, 'redirect'])->name('steam.login');
+Route::get('/auth/steam/callback', [SteamAuthController::class, 'callback'])->name('steam.callback');
+Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+Route::post('/account', [AccountController::class, 'update'])
+    ->middleware(EnsureSteamUserAuthenticated::class)
+    ->name('account.update');
+Route::post('/account/logout', [AccountController::class, 'logout'])
+    ->middleware(EnsureSteamUserAuthenticated::class)
+    ->name('account.logout');
 
 // Public frontend
 Route::get('/', [HomeController::class, 'index'])->name('home');

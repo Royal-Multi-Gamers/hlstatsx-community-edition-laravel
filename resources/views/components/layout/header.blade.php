@@ -59,6 +59,13 @@
     if ($showCheaters) {
         $allNavLinks->push(['label' => __('Banned Players'), 'url' => route('bans.index'), 'badge' => 'BP']);
     }
+
+    if (auth()->check() && !empty(auth()->user()?->steam_id)) {
+        $allNavLinks->push(['label' => __('My Account'), 'url' => route('account.index'), 'badge' => 'ME']);
+    } else {
+        $allNavLinks->push(['label' => __('Steam Login'), 'url' => route('steam.login'), 'badge' => 'ST']);
+    }
+
     $allNavLinks->push(['label' => __('Admin'), 'url' => route('admin.dashboard'), 'badge' => 'AD']);
 @endphp
 
