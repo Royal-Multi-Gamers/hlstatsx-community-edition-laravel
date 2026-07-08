@@ -15,6 +15,7 @@ use App\Http\Controllers\Frontend\MapController;
 use App\Http\Controllers\Frontend\PlayerController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\ServerController;
+use App\Http\Controllers\Frontend\SitemapController;
 use App\Http\Controllers\Frontend\SteamAuthController;
 use App\Http\Controllers\Frontend\RoleController;
 use App\Http\Controllers\Frontend\IngameController;
@@ -46,6 +47,9 @@ Route::prefix('install')->name('install.')->group(function () {
 
 // Language switch
 Route::post('/language/{locale}', [LocaleController::class, 'switch'])->name('language.switch');
+
+// SEO
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Steam user space
 Route::get('/auth/steam', [SteamAuthController::class, 'redirect'])->name('steam.login');

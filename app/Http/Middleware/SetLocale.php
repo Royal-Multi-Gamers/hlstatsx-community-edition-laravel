@@ -33,7 +33,13 @@ class SetLocale
                 ->all()
         );
 
-        if (session()->has('locale')) {
+        $queryLocale = $request->query('lang');
+
+        if (is_string($queryLocale) && in_array($queryLocale, $allowed, true)) {
+            // Locale in URL takes priority and persists in session.
+            $locale = $queryLocale;
+            session(['locale' => $locale]);
+        } elseif (session()->has('locale')) {
             // User made an explicit choice — honour it
             $locale = session('locale');
         } else {

@@ -4,6 +4,16 @@
     :gameNav="$clan->game"
     activeTab="clans">
 
+    <x-slot:head>
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => $clan->name,
+            'alternateName' => $clan->tag,
+            'url' => route('clans.show', $clan->clanId),
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    </x-slot:head>
+
 <div x-data="{ tab: 'members' }">
 
 {{-- Clan header --}}

@@ -4,6 +4,17 @@
     :gameNav="$server->game"
     activeTab="servers">
 
+    <x-slot:head>
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'GameServer',
+            'name' => $server->name,
+            'url' => route('servers.show', $server->serverId),
+            'game' => $server->realgame,
+            'serverStatus' => ($server->last_event ?? 0) >= now()->subMinutes(5)->timestamp ? 'Online' : 'Offline',
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    </x-slot:head>
+
     {{-- Server info header --}}
     <div class="hlx-surface" style="border:1px solid var(--border); border-radius:var(--border-radius-md); padding:16px; margin-bottom:16px; display:flex; gap:16px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
         <div>

@@ -4,6 +4,17 @@
     :gameNav="$player->game"
     activeTab="players">
 
+    <x-slot:head>
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Person',
+            'name' => $player->lastName,
+            'url' => route('players.show', $player->playerId),
+            'description' => $player->fullName ?: null,
+            'sameAs' => $steamId64 ? ['https://steamcommunity.com/profiles/' . $steamId64] : null,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    </x-slot:head>
+
 @php
     // Connection time â†’ Xd HH:MM:SSh
     $ct   = (int) $player->connection_time;

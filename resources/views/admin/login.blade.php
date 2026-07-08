@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
     <title>Admin Login — {{ config('services.hlstats.site_name') }}</title>
     @php $theme = app(\App\Services\ThemeService::class)->getActive(); @endphp
     <style>
