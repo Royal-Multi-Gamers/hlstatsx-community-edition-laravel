@@ -1,12 +1,13 @@
 @props(['crumbs' => []])
 
+@php
+    $siteName = (string) \App\Models\Option::get('sitename', config('services.hlstats.site_name', 'HLStatsX'));
+@endphp
+
 <div class="hlx-breadcrumb">
     <div class="hlx-pane-content">
         <span style="color:var(--text-primary); font-weight:600;">
-            {{ config('services.hlstats.site_name', 'HLStatsX') }}
-            @if(config('services.hlstats.site_subtitle'))
-                <span style="color:var(--text-secondary);">.:. {{ config('services.hlstats.site_subtitle') }}</span>
-            @endif
+            {{ $siteName }}
         </span>
 
         @foreach($crumbs as $label => $url)
