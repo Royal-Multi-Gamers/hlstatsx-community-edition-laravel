@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "geoip2/geoip2": "^3.3",
+        "guzzlehttp/guzzle": "^7.13",
         "laravel/framework": "^13.15",
         "laravel/tinker": "^3.0",
         "predis/predis": "^3.5",
