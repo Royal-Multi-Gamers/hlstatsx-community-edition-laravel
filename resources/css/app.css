@@ -697,6 +697,13 @@
   }
 }
 
+/* Leaflet controls use z-index up to 1000 internally; give the map its own
+   stacking context so they stay below the sidebar (z-index 480) */
+.leaflet-container {
+  position: relative;
+  z-index: 0;
+}
+
 /* ============================================================
    Responsive — Mobile
    ============================================================ */
@@ -829,7 +836,8 @@
     transform: translateX(0);
   }
 
-  .hlx-app-sidebar-overlay {
+  /* Overlay only when the drawer is open — otherwise it blocks all taps */
+  .hlx-app-shell.hlx-nav-open .hlx-app-sidebar-overlay {
     display: block;
   }
 
