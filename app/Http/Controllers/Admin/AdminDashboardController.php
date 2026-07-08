@@ -35,6 +35,11 @@ class AdminDashboardController extends Controller
 
     public function index()
     {
+        $period = (int) request()->integer('period', 7);
+        if (!in_array($period, [7, 30, 90], true)) {
+            $period = 7;
+        }
+
         $stats = [
             'players' => Player::count(),
             'clans'   => Clan::count(),
@@ -47,8 +52,80 @@ class AdminDashboardController extends Controller
 
         $globalStats = $this->stats->getGlobalStats();
         $versionInfo = $this->getVersionInfo();
+        $dashboardCharts = [
+            'killsPerDay' => $this->getDailyEventSeries('hlstats_Events_Frags', 'eventTime', $period),
+            'connectionsPerDay' => $this->getDailyEventSeries('hlstats_Events_Connects', 'eventTime', $period),
+            'playersByGame' => $this->getPlayersByGameChart(6),
+            'bansStatus' => $this->getBansStatusChart(),
+        ];
 
-        return view('admin.dashboard', compact('stats', 'globalStats', 'versionInfo'));
+        return view('admin.dashboard', compact('stats', 'globalStats', 'versionInfo', 'dashboardCharts', 'period'));
+    }
+
+    private function getDailyEventSeries(string $table, string $dateColumn, int $days = 7): array
+    {
+        $days = max(1, $days);
+        $start = now()->subDays($days - 1)->startOfDay();
+
+        $rows = DB::table($table)
+            ->selectRaw("DATE($dateColumn) as day, COUNT(*) as total")
+            ->where($dateColumn, '>=', $start)
+            ->groupByRaw("DATE($dateColumn)")
+            ->orderByRaw("DATE($dateColumn)")
+            ->get();
+
+        $totalsByDay = $rows
+            ->mapWithKeys(fn ($row) => [(string) $row->day => (int) $row->total])
+            ->all();
+
+        $labels = [];
+        $data = [];
+
+        for ($offset = $days - 1; $offset >= 0; $offset--) {
+            $day = now()->subDays($offset);
+            $key = $day->toDateString();
+
+            $labels[] = $day->isoFormat('DD/MM');
+            $data[] = $totalsByDay[$key] ?? 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+        ];
+    }
+
+    private function getPlayersByGameChart(int $limit = 6): array
+    {
+        $rows = DB::table('hlstats_Players as p')
+            ->leftJoin('hlstats_Games as g', 'g.code', '=', 'p.game')
+            ->select('p.game', 'g.name')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('p.game', 'g.name')
+            ->orderByDesc('total')
+            ->limit(max(1, $limit))
+            ->get();
+
+        return [
+            'labels' => $rows->map(fn ($row) => $row->name ?: $row->game)->values()->all(),
+            'data' => $rows->map(fn ($row) => (int) $row->total)->values()->all(),
+        ];
+    }
+
+    private function getBansStatusChart(): array
+    {
+        $activeCount = Ban::where(function ($query) {
+            $query->whereNull('expires')->orWhere('expires', '>', now());
+        })->count();
+
+        $expiredCount = Ban::whereNotNull('expires')
+            ->where('expires', '<=', now())
+            ->count();
+
+        return [
+            'labels' => [__('Active bans'), __('Expired bans')],
+            'data' => [(int) $activeCount, (int) $expiredCount],
+        ];
     }
 
     private function getInstalledVersion(): string

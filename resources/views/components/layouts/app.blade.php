@@ -32,28 +32,34 @@
 
     {{ $head ?? '' }}
 </head>
-<body>
+<body class="hlx-app-body">
+
+<div id="hlxAppShell" class="hlx-app-shell">
 
 {{-- Header --}}
 <x-layout.header />
 
-{{-- Breadcrumb --}}
-@if($breadcrumb)
-    <x-layout.breadcrumb :crumbs="$breadcrumb" />
-@endif
+<div class="hlx-layout-shell">
+    {{-- Breadcrumb --}}
+    @if($breadcrumb)
+        <x-layout.breadcrumb :crumbs="$breadcrumb" />
+    @endif
 
-{{-- Game navigation tabs --}}
-@if($gameNav)
-    <x-layout.game-nav :game="$gameNav" :active="$activeTab" />
-@endif
+    {{-- Game navigation tabs --}}
+    @if($gameNav)
+        <x-layout.game-nav :game="$gameNav" :active="$activeTab" />
+    @endif
 
-{{-- Main content --}}
-<main class="hlx-container" style="padding-top:12px; padding-bottom:24px;">
-    {{ $slot }}
-</main>
+    {{-- Main content --}}
+    <main class="hlx-container hlx-main-content">
+        {{ $slot }}
+    </main>
 
-{{-- Footer --}}
-<x-layout.footer />
+    {{-- Footer --}}
+    <x-layout.footer />
+</div>
+
+</div>
 
 </body>
 </html>

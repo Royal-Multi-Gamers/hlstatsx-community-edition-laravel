@@ -1,4 +1,8 @@
+@props(['adminMode' => false])
+
 @php
+    use Illuminate\Support\Str;
+
     $theme = app(\App\Services\ThemeService::class)->getActive();
     $logo    = $theme['logo']   ?? [];
     $header  = $theme['header'] ?? [];
@@ -37,76 +41,81 @@
     ];
     $currentFlag = $flagMap[app()->getLocale()] ?? app()->getLocale();
 
-    // Build nav links once — reused in desktop nav and mobile drawer
+    // Build nav links once — reused in sidebar nav and mobile drawer
     $allNavLinks = collect($navBtns)->map(function ($btn) use ($forumUrl) {
         $url = $btn['url'];
+        $translatedLabel = __($btn['label']);
         if (strtolower($btn['label']) === 'forums') $url = !empty($forumUrl) ? $forumUrl : '#';
         elseif (strtolower($btn['label']) === 'help') $url = route('help');
-        return ['label' => $btn['label'], 'url' => $url];
+        return [
+            'label' => $translatedLabel,
+            'url' => $url,
+            'badge' => Str::upper(Str::substr(preg_replace('/[^A-Za-z0-9]/', '', $translatedLabel), 0, 2) ?: 'NA'),
+        ];
     });
-    if ($showChat)     $allNavLinks->push(['label' => __('Chat'),           'url' => route('chat.index')]);
-    if ($showCheaters) $allNavLinks->push(['label' => __('Banned Players'), 'url' => route('bans.index')]);
-    $allNavLinks->push(['label' => __('Admin'), 'url' => route('admin.dashboard')]);
+    if ($showChat) {
+        $allNavLinks->push(['label' => __('Chat'), 'url' => route('chat.index'), 'badge' => 'CH']);
+    }
+    if ($showCheaters) {
+        $allNavLinks->push(['label' => __('Banned Players'), 'url' => route('bans.index'), 'badge' => 'BP']);
+    }
+    $allNavLinks->push(['label' => __('Admin'), 'url' => route('admin.dashboard'), 'badge' => 'AD']);
 @endphp
 
+@if($adminMode)
 <div x-data="{ open: false, langOpen: false }">
 
-    <header class="hlx-header" style="display:flex; align-items:center; padding:0 16px; justify-content:space-between;">
+    <header class="hlx-header">
 
         {{-- Logo --}}
-        <a href="{{ route('home') }}" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+        <a href="{{ route('home') }}" class="hlx-header-brand">
             @if($logo['show-icon'] ?? true)
-                <span style="
-                    display:inline-flex; align-items:center; justify-content:center;
-                    width:36px; height:36px; border-radius:6px;
-                    background-color:{{ $logo['icon-bg'] ?? 'var(--accent-primary)' }};
-                    font-size:14px; font-weight:700; color:#fff;
-                ">H</span>
+                <span class="hlx-header-brand-icon" style="background-color:{{ $logo['icon-bg'] ?? 'var(--accent-primary)' }};">H</span>
             @endif
-            <span style="font-size:17px; font-weight:700; color:{{ $logo['color'] ?? 'var(--accent-secondary)' }}; letter-spacing:0.04em; font-family:var(--font-family-base);">
+            <span class="hlx-header-brand-text" style="color:{{ $logo['color'] ?? 'var(--accent-secondary)' }};">
                 {{ $logo['text'] ?? 'HLSTATSX: CE' }}
             </span>
         </a>
 
         {{-- Desktop: nav buttons + social icons (hidden on mobile via CSS) --}}
-        <div class="hlx-header-desktop" style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <div class="hlx-header-desktop">
 
-            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            <nav class="hlx-header-nav" aria-label="Primary">
                 @foreach($allNavLinks as $link)
-                    <a href="{{ $link['url'] }}"
-                       style="background-color:var(--accent-primary); color:#fff; border-radius:var(--border-radius-pill); padding:3px 12px; font-size:var(--font-size-sm); font-weight:600; text-decoration:none; white-space:nowrap;">
+                    <a href="{{ $link['url'] }}" class="hlx-header-link">
                         {{ $link['label'] }}
                     </a>
                 @endforeach
-            </div>
+            </nav>
 
             @if($header['show-social-icons'] ?? true)
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div class="hlx-header-meta">
                     @if($showSteam)
-                        <a href="{{ $steamUrl }}" title="Steam" target="_blank" rel="noopener" style="color:var(--text-secondary); font-size:12px; text-decoration:none;">{{ __('Steam') }}</a>
+                        <a href="{{ $steamUrl }}" title="Steam" target="_blank" rel="noopener" class="hlx-header-meta-link">{{ __('Steam') }}</a>
                     @endif
                     @if($showDiscord)
-                        <a href="{{ $discordUrl }}" title="Discord" target="_blank" rel="noopener" style="color:var(--text-secondary); font-size:12px; text-decoration:none;">{{ __('Discord') }}</a>
+                        <a href="{{ $discordUrl }}" title="Discord" target="_blank" rel="noopener" class="hlx-header-meta-link">{{ __('Discord') }}</a>
                     @endif
                     @if(($showSteam || $showDiscord) && $showLang)
-                        <span style="color:var(--border); font-size:12px;">|</span>
+                        <span class="hlx-header-meta-sep">|</span>
                     @endif
                     @if($showLang && $availableLocales->count() > 1)
-                        <div style="position:relative;" @click.outside="langOpen = false">
+                        <div class="hlx-lang-switcher" @click.outside="langOpen = false">
                             <button @click="langOpen = !langOpen"
-                                    style="display:flex; align-items:center; gap:4px; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding:2px 7px; font-size:11px; font-weight:600; color:var(--text-secondary);">
+                                    class="hlx-lang-trigger">
                                 <img src="/hlstatsimg/flags/{{ $currentFlag }}.gif" alt="{{ app()->getLocale() }}" style="width:16px; height:11px; object-fit:cover;">
                                 {{ strtoupper(app()->getLocale()) }}
                                 <span style="font-size:8px; line-height:1;">&#9660;</span>
                             </button>
                             <div x-show="langOpen" x-transition
-                                 style="position:absolute; right:0; top:calc(100% + 4px); background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; min-width:90px; z-index:200; box-shadow:0 4px 12px rgba(0,0,0,0.2); overflow:hidden;">
+                                 class="hlx-lang-menu">
                                 @foreach($availableLocales as $loc)
                                     @php $fc = $flagMap[$loc] ?? $loc; @endphp
                                     <form method="POST" action="{{ route('language.switch', $loc) }}" style="margin:0;">
                                         @csrf
                                         <button type="submit"
-                                                style="display:flex; align-items:center; gap:7px; width:100%; padding:6px 10px; background:{{ app()->getLocale() === $loc ? 'var(--accent-primary)' : 'none' }}; color:{{ app()->getLocale() === $loc ? '#fff' : 'var(--text-primary)' }}; border:none; cursor:pointer; font-size:12px; font-weight:500; text-align:left; white-space:nowrap;">
+                                                class="hlx-lang-option"
+                                                style="background:{{ app()->getLocale() === $loc ? 'var(--accent-primary)' : 'none' }}; color:{{ app()->getLocale() === $loc ? '#fff' : 'var(--text-primary)' }};">
                                             <img src="/hlstatsimg/flags/{{ $fc }}.gif" alt="{{ $loc }}" style="width:16px; height:11px; object-fit:cover;">
                                             {{ strtoupper($loc) }}
                                         </button>
@@ -150,4 +159,89 @@
         </div>
     </div>
 
+ </div>
+@else
+<div class="hlx-mobile-topbar">
+    <button class="hlx-mobile-topbar-btn" data-nav-mobile-toggle aria-label="Toggle menu">
+        <span class="hlx-icon-open" aria-hidden="true">&#9776;</span>
+        <span class="hlx-icon-close" aria-hidden="true">&#x2715;</span>
+    </button>
+    <a href="{{ route('home') }}" class="hlx-mobile-topbar-brand">
+        <img src="/favicon.ico" alt="{{ $logo['text'] ?? 'HLStatsX: CE' }}" class="hlx-mobile-topbar-favicon">
+        <span>{{ $logo['text'] ?? 'HLStatsX: CE' }}</span>
+    </a>
 </div>
+
+<div class="hlx-app-sidebar-overlay" data-nav-overlay></div>
+
+<aside class="hlx-app-sidebar">
+    <div class="hlx-app-sidebar-header">
+        <a href="{{ route('home') }}" class="hlx-app-brand" title="{{ $logo['text'] ?? 'HLStatsX: CE' }}">
+            <img src="/favicon.ico" alt="{{ $logo['text'] ?? 'HLStatsX: CE' }}" class="hlx-app-brand-favicon">
+            <span class="hlx-app-brand-text">{{ $logo['text'] ?? 'HLStatsX: CE' }}</span>
+        </a>
+
+        <button class="hlx-app-sidebar-toggle" data-nav-collapse-toggle aria-label="Collapse menu">
+            <span class="hlx-toggle-open" aria-hidden="true">&#10094;</span>
+            <span class="hlx-toggle-close" aria-hidden="true">&#10095;</span>
+        </button>
+    </div>
+
+    <nav class="hlx-app-sidebar-nav" aria-label="Primary">
+        @foreach($allNavLinks as $link)
+            @php
+                $isExternal = Str::startsWith($link['url'], ['http://', 'https://']);
+                $isActive = !$isExternal && $link['url'] !== '#' && request()->fullUrlIs(rtrim($link['url'], '/'), rtrim($link['url'], '/') . '/*');
+            @endphp
+            <a href="{{ $link['url'] }}"
+               class="hlx-app-nav-link{{ $isActive ? ' is-active' : '' }}"
+               title="{{ $link['label'] }}"
+               @if($isExternal) target="_blank" rel="noopener" @endif>
+                <span class="hlx-app-nav-icon">{{ $link['badge'] }}</span>
+                <span class="hlx-app-nav-label">{{ $link['label'] }}</span>
+            </a>
+        @endforeach
+    </nav>
+
+    <div class="hlx-app-sidebar-tools">
+        @if($showSteam)
+            <a href="{{ $steamUrl }}" target="_blank" rel="noopener" class="hlx-app-tool-link" title="Steam">
+                <span class="hlx-app-nav-icon">ST</span>
+                <span class="hlx-app-nav-label">Steam</span>
+            </a>
+        @endif
+        @if($showDiscord)
+            <a href="{{ $discordUrl }}" target="_blank" rel="noopener" class="hlx-app-tool-link" title="Discord">
+                <span class="hlx-app-nav-icon">DS</span>
+                <span class="hlx-app-nav-label">Discord</span>
+            </a>
+        @endif
+
+        @if($showLang && $availableLocales->count() > 1)
+            <details class="hlx-app-lang-dropdown">
+                <summary class="hlx-app-lang-trigger" title="{{ __('Language') }}">
+                    <img src="/hlstatsimg/flags/{{ $currentFlag }}.gif" alt="{{ app()->getLocale() }}" class="hlx-app-lang-flag">
+                    <span class="hlx-app-nav-label">{{ strtoupper(app()->getLocale()) }}</span>
+                    <span class="hlx-app-lang-caret" aria-hidden="true">&#9662;</span>
+                </summary>
+
+                <div class="hlx-app-lang-menu">
+                    @foreach($availableLocales as $loc)
+                        @php
+                            $fc = $flagMap[$loc] ?? $loc;
+                            $isCurrentLocale = app()->getLocale() === $loc;
+                        @endphp
+                        <form method="POST" action="{{ route('language.switch', $loc) }}">
+                            @csrf
+                            <button type="submit" class="hlx-app-lang-btn{{ $isCurrentLocale ? ' is-active' : '' }}" title="{{ strtoupper($loc) }}">
+                                <img src="/hlstatsimg/flags/{{ $fc }}.gif" alt="{{ $loc }}" class="hlx-app-lang-flag">
+                                <span class="hlx-app-nav-label">{{ strtoupper($loc) }}</span>
+                            </button>
+                        </form>
+                    @endforeach
+                </div>
+            </details>
+        @endif
+    </div>
+</aside>
+@endif

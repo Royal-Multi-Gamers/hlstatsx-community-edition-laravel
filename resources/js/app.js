@@ -91,3 +91,82 @@ window.initActivityChart = function (canvasId, labels, data, label) {
 window.initSkillChart = function (canvasId, labels, data) {
     window.initActivityChart(canvasId, labels, data, 'Skill');
 };
+
+function initSidebarNavigation() {
+    const shell = document.getElementById('hlxAppShell');
+    if (!shell) return;
+
+    const sidebar = shell.querySelector('.hlx-app-sidebar');
+    if (!sidebar) return;
+
+    const mobileQuery = window.matchMedia('(max-width: 768px)');
+    const storageKey = 'hlx_nav_collapsed';
+
+    const setCollapsed = (collapsed) => {
+        shell.classList.toggle('hlx-nav-collapsed', collapsed);
+        sidebar.classList.toggle('is-collapsed', collapsed);
+    };
+
+    const setMobileOpen = (open) => {
+        shell.classList.toggle('hlx-nav-open', open);
+        sidebar.classList.toggle('is-open', open);
+    };
+
+    let savedCollapsed = false;
+    try {
+        savedCollapsed = localStorage.getItem(storageKey) === 'true';
+    } catch {
+        savedCollapsed = false;
+    }
+
+    setCollapsed(savedCollapsed);
+    setMobileOpen(false);
+
+    shell.querySelectorAll('[data-nav-collapse-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const collapsed = !shell.classList.contains('hlx-nav-collapsed');
+            setCollapsed(collapsed);
+            try {
+                localStorage.setItem(storageKey, collapsed ? 'true' : 'false');
+            } catch {
+                // Ignore storage failures (private mode, blocked storage).
+            }
+        });
+    });
+
+    shell.querySelectorAll('[data-nav-mobile-toggle]').forEach((button) => {
+        button.addEventListener('click', () => {
+            setMobileOpen(!shell.classList.contains('hlx-nav-open'));
+        });
+    });
+
+    shell.querySelectorAll('[data-nav-overlay]').forEach((overlay) => {
+        overlay.addEventListener('click', () => setMobileOpen(false));
+    });
+
+    shell.querySelectorAll('.hlx-app-sidebar a, .hlx-app-sidebar form button').forEach((item) => {
+        item.addEventListener('click', () => {
+            if (mobileQuery.matches) {
+                setMobileOpen(false);
+            }
+        });
+    });
+
+    const onViewportChange = (event) => {
+        if (!event.matches) {
+            setMobileOpen(false);
+        }
+    };
+
+    if (mobileQuery.addEventListener) {
+        mobileQuery.addEventListener('change', onViewportChange);
+    } else {
+        mobileQuery.addListener(onViewportChange);
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebarNavigation);
+} else {
+    initSidebarNavigation();
+}

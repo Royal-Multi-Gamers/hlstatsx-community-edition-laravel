@@ -22,26 +22,28 @@
 @endphp
 
 <div style="background-color:var(--bg-surface); border-bottom:1px solid var(--border); padding:8px 16px;">
-    <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-        @if($gameCode)
-            <x-ui.game-logo :game="$realGameCode" :size="20" style="margin-right:4px;" />
-        @endif
-        @foreach($tabs as $key => $tab)
-            @php
-                $url = isset($tab['query'])
-                    ? route($tab['route'], array_merge($tab['params'], ['query' => $tab['query']]))
-                    : route($tab['route'], $tab['params']);
+    <div class="hlx-pane-content">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+            @if($gameCode)
+                <x-ui.game-logo :game="$realGameCode" :size="20" style="margin-right:4px;" />
+            @endif
+            @foreach($tabs as $key => $tab)
+                @php
+                    $url = isset($tab['query'])
+                        ? route($tab['route'], array_merge($tab['params'], ['query' => $tab['query']]))
+                        : route($tab['route'], $tab['params']);
 
-                // Build URL with query string properly
-                if (isset($tab['query'])) {
-                    $url = route($tab['route'], $tab['params']) . '?' . http_build_query($tab['query']);
-                }
+                    // Build URL with query string properly
+                    if (isset($tab['query'])) {
+                        $url = route($tab['route'], $tab['params']) . '?' . http_build_query($tab['query']);
+                    }
 
-                $isActive = $active === $key;
-            @endphp
-            <a href="{{ $url }}" @class(['hlx-nav-tab', 'active' => $isActive])>
-                {{ $tab['label'] }}
-            </a>
-        @endforeach
+                    $isActive = $active === $key;
+                @endphp
+                <a href="{{ $url }}" @class(['hlx-nav-tab', 'active' => $isActive])>
+                    {{ $tab['label'] }}
+                </a>
+            @endforeach
+        </div>
     </div>
 </div>

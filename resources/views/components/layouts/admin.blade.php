@@ -1,11 +1,21 @@
 @props(['title' => null])
+@php
+    $resolvedTitle = $title ?? 'Admin';
+    if (is_string($resolvedTitle)) {
+        if (preg_match('/^(.*?)(:|—)\s*(.+)$/u', $resolvedTitle, $matches)) {
+            $resolvedTitle = trim(__($matches[1])) . ' ' . $matches[2] . ' ' . $matches[3];
+        } else {
+            $resolvedTitle = __($resolvedTitle);
+        }
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Admin' }} — {{ config('services.hlstats.site_name', 'HLStatsX: CE') }}</title>
+    <title>{{ $resolvedTitle }} — {{ config('services.hlstats.site_name', 'HLStatsX: CE') }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
