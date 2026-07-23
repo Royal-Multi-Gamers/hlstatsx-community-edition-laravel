@@ -48,7 +48,7 @@ class AccountController extends Controller
         }
 
         $data = $request->validate([
-            'fullName' => ['nullable', 'string', 'max:128'],
+            'fullName' => ['nullable', 'string', 'max:128', 'regex:/^[^<>]*$/'],
             'email' => ['nullable', 'email:rfc,dns', 'max:64'],
             'homepage' => ['nullable', 'url', 'max:64'],
         ]);

@@ -14,9 +14,9 @@
         </div>
         <div style="margin-bottom:14px;">
             <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">Password</label>
-            <input type="password" name="password" required minlength="4"
+            <input type="password" name="password" required minlength="12"
                    style="width:100%; box-sizing:border-box; background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:6px 10px; font-size:var(--font-size-sm);">
-            <span style="font-size:11px; color:var(--text-secondary);">Stored as MD5 (legacy system)</span>
+            <span style="font-size:11px; color:var(--text-secondary);">{{ __('12 characters minimum. Stored with bcrypt.') }}</span>
         </div>
         <div style="margin-bottom:20px;">
             <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">Access Level</label>

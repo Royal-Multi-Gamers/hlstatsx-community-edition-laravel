@@ -42,7 +42,20 @@ php artisan storage:link
 
 # 8. Migrations Laravel (obligatoire)
 php artisan migrate
+
+# 9. Sceller l'assistant d'installation (obligatoire)
+echo "APP_INSTALLED=true" >> .env
+php artisan config:clear
 ```
+
+> **Sécurité — étape 9 obligatoire.** Les routes `/install/*` créent un compte
+> superadmin et réécrivent les identifiants de base de données dans `.env`, sans
+> aucune authentification. Tant que `APP_INSTALLED=true` n'est pas positionné,
+> l'application les scelle en repli en vérifiant la présence d'un compte dans
+> `hlstats_Admins` — mais ne comptez pas dessus : positionnez la variable.
+>
+> Vérification : `curl -o /dev/null -w '%{http_code}' https://votre-site/install`
+> doit répondre `404`.
 
 > **Important** : l'étape `migrate` initialise la version de l'application dans `hlstats_Options` (clé `version`). Sans cette étape, le panneau d'administration ne pourra pas détecter les mises à jour disponibles.
 

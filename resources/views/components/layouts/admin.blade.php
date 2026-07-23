@@ -146,15 +146,18 @@
                     <svg :class="{ 'collapsed': !open }" class="sidebar-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5L5 6.5L8 3.5"/></svg>
                 </button>
                 <div x-show="open" x-transition>
-                    <a href="{{ route('admin.options.index') }}" @class(['active' => request()->routeIs('admin.options.*')])>{{ __('Options') }}</a>
-                    <a href="{{ route('admin.admin-users.index') }}" @class(['active' => request()->routeIs('admin.admin-users.*')])>{{ __('Admin Users') }}</a>
+                    @if(auth('admin')->user()?->isSuperAdmin())
+                        <a href="{{ route('admin.options.index') }}" @class(['active' => request()->routeIs('admin.options.*')])>{{ __('Options') }}</a>
+                        <a href="{{ route('admin.admin-users.index') }}" @class(['active' => request()->routeIs('admin.admin-users.*')])>{{ __('Admin Users') }}</a>
+                    @endif
                     <a href="{{ route('admin.clan-tags.index') }}" @class(['active' => request()->routeIs('admin.clan-tags.*')])>{{ __('Clan Tags') }}</a>
                     <a href="{{ route('admin.host-groups.index') }}" @class(['active' => request()->routeIs('admin.host-groups.*')])>{{ __('Host Groups') }}</a>
                     <a href="{{ route('admin.server-config.index') }}" @class(['active' => request()->routeIs('admin.server-config.*')])>{{ __('Server Config') }}</a>
                 </div>
             </div>
 
-            {{-- System --}}
+            {{-- System (super administrators only) --}}
+            @if(auth('admin')->user()?->isSuperAdmin())
             <div x-data="{ open: {{ request()->routeIs('admin.themes.*', 'admin.tools.*', 'admin.update.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span>{{ __('System') }}</span>
@@ -166,6 +169,7 @@
                     <a href="{{ route('admin.update.index') }}" @class(['active' => request()->routeIs('admin.update.*')])>{{ __('Update') }}</a>
                 </div>
             </div>
+            @endif
 
         </div>
 

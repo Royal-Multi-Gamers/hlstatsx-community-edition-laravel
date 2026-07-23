@@ -54,20 +54,39 @@ class ThemeService
     /**
      * Generate CSS custom properties string for injection into <head>.
      */
+    /** Custom property names: letters, digits and dashes only. */
+    private const CSS_KEY_PATTERN = '/^[A-Za-z0-9\-]+$/';
+
+    /**
+     * Declaration values. Rejects the characters needed to escape a single
+     * declaration: < and > (closing the <style> block), { } ; (injecting extra
+     * rules), @ (@import) and \ ` (escape tricks). Quotes and commas stay
+     * allowed so font stacks such as "'Inter', sans-serif" keep working.
+     */
+    private const CSS_VALUE_PATTERN = '/^[^<>{};@\\\\`]+$/';
+
     public function getCssVariables(array $theme): string
     {
         $lines = [];
 
-        foreach ($theme['colors'] ?? [] as $key => $value) {
-            $lines[] = "  --{$key}: {$value};";
-        }
+        foreach (['colors', 'typography', 'layout'] as $section) {
+            foreach ($theme[$section] ?? [] as $key => $value) {
+                if (! is_scalar($value)) {
+                    continue;
+                }
 
-        foreach ($theme['typography'] ?? [] as $key => $value) {
-            $lines[] = "  --{$key}: {$value};";
-        }
+                $key   = (string) $key;
+                $value = trim((string) $value);
 
-        foreach ($theme['layout'] ?? [] as $key => $value) {
-            $lines[] = "  --{$key}: {$value};";
+                if (! preg_match(self::CSS_KEY_PATTERN, $key)) {
+                    continue;
+                }
+                if (! preg_match(self::CSS_VALUE_PATTERN, $value)) {
+                    continue;
+                }
+
+                $lines[] = "  --{$key}: {$value};";
+            }
         }
 
         return implode("\n", $lines);

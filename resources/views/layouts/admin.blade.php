@@ -73,8 +73,10 @@
         <a href="{{ route('admin.weapons.index') }}" @class(['active' => request()->routeIs('admin.weapons.*')])>Weapons</a>
         <a href="{{ route('admin.bans.index') }}" @class(['active' => request()->routeIs('admin.bans.*')])>Bans</a>
 
+        @if(auth('admin')->user()?->isSuperAdmin())
         <div class="sidebar-group">System</div>
         <a href="{{ route('admin.themes.index') }}" @class(['active' => request()->routeIs('admin.themes.*')])>Themes</a>
+        @endif
 
         <div style="margin-top:auto; padding:16px;">
             <form method="POST" action="{{ route('admin.logout') }}">

@@ -9,7 +9,7 @@
         @csrf @method('PUT')
         <div style="margin-bottom:14px;">
             <label class="hlx-muted" style="display:block; margin-bottom:4px; font-size:var(--font-size-sm);">New Password <span style="font-weight:normal;">(leave blank to keep current)</span></label>
-            <input type="password" name="password" minlength="4"
+            <input type="password" name="password" minlength="12"
                    style="width:100%; box-sizing:border-box; background-color:var(--bg-body); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--border-radius-sm); padding:6px 10px; font-size:var(--font-size-sm);">
         </div>
         <div style="margin-bottom:20px;">

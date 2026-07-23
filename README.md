@@ -33,6 +33,12 @@ cp .env.example .env
 php artisan key:generate
 # Edit .env with your DB, Redis, Steam API key...
 npm run build
+php artisan migrate
+
+# Required: seals the unauthenticated /install/* wizard, which can otherwise
+# create a superadmin account and rewrite your DB credentials in .env.
+echo "APP_INSTALLED=true" >> .env
+php artisan config:clear
 ```
 
 ## Key .env Variables

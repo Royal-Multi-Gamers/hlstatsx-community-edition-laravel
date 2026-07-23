@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Installed
+    |--------------------------------------------------------------------------
+    |
+    | Set to true once the application is deployed. This permanently seals the
+    | unauthenticated /install/* wizard, which can otherwise create a superadmin
+    | account and rewrite the database credentials in .env.
+    |
+    */
+
+    'installed' => env('APP_INSTALLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

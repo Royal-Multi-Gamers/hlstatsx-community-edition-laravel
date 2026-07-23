@@ -7008,7 +7008,10 @@ CREATE TABLE IF NOT EXISTS `hlstats_Users` (
 -- Dumping data for table `hlstats_Users`
 --
 
-INSERT INTO `hlstats_Users` VALUES ('admin','e10adc3949ba59abbe56e057f20f883e',100,0);
+-- No default account is seeded on purpose: the historical 'admin' / '123456'
+-- row was a working superadmin login on every fresh install. The first
+-- administrator is created by the install wizard (step 4) or by
+-- `php artisan hlstats:create-admin`.
 
 -- --------------------------------------------------------
 

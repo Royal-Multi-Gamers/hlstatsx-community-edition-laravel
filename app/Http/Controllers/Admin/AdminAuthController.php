@@ -45,17 +45,35 @@ class AdminAuthController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // Legacy MD5 fallback (hlstats_Users)
+        // Legacy fallback (hlstats_Users): bcrypt for accounts created from the
+        // admin panel, MD5 only for rows inherited from the Perl daemon.
         $legacy = DB::table('hlstats_Users')
             ->where('username', $credentials['username'])
             ->first();
 
-        if ($legacy && md5($credentials['password']) === $legacy->password) {
+        if ($legacy && $this->legacyPasswordMatches($credentials['password'], (string) $legacy->password)) {
             $request->session()->put('admin_migrate_user', $legacy->username);
             return redirect()->route('admin.migrate-password');
         }
 
         return back()->withErrors(['username' => 'Identifiants invalides.'])->onlyInput('username');
+    }
+
+    /**
+     * A stored hash is a legacy MD5 digest only when it is exactly 32 hex
+     * characters; anything longer is a modern hash and must go through Hash.
+     */
+    private function legacyPasswordMatches(string $plain, string $stored): bool
+    {
+        if ($stored === '') {
+            return false;
+        }
+
+        if (strlen($stored) === 32 && ctype_xdigit($stored)) {
+            return hash_equals($stored, md5($plain));
+        }
+
+        return Hash::check($plain, $stored);
     }
 
     public function showMigratePassword(Request $request)

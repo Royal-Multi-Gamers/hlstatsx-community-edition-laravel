@@ -112,28 +112,39 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::delete('/{id}', [AdminVoiceCommController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
         });
 
-        // Themes
-        Route::prefix('themes')->name('themes.')->group(function () {
-            Route::get('/', [AdminThemeController::class, 'index'])->name('index');
-            Route::get('/{slug}/edit', [AdminThemeController::class, 'edit'])->name('edit');
-            Route::put('/{slug}', [AdminThemeController::class, 'update'])->name('update');
-            Route::post('/{slug}/activate', [AdminThemeController::class, 'activate'])->name('activate');
-            Route::post('/{slug}/duplicate', [AdminThemeController::class, 'duplicate'])->name('duplicate');
-            Route::delete('/{slug}', [AdminThemeController::class, 'destroy'])->name('destroy');
-        });
+        /*
+        |----------------------------------------------------------------------
+        | Installation-wide sections — super administrators only.
+        |----------------------------------------------------------------------
+        | These grant control over accounts, global configuration, the theme
+        | injected on every page, destructive data tools and the updater, so
+        | they must not be reachable by a game-scoped admin or a moderator.
+        */
+        Route::middleware('admin.superadmin')->group(function () {
 
-        // Options
-        Route::get('/options', [AdminOptionsController::class, 'index'])->name('options.index');
-        Route::put('/options', [AdminOptionsController::class, 'update'])->name('options.update');
+            // Themes
+            Route::prefix('themes')->name('themes.')->group(function () {
+                Route::get('/', [AdminThemeController::class, 'index'])->name('index');
+                Route::get('/{slug}/edit', [AdminThemeController::class, 'edit'])->name('edit');
+                Route::put('/{slug}', [AdminThemeController::class, 'update'])->name('update');
+                Route::post('/{slug}/activate', [AdminThemeController::class, 'activate'])->name('activate');
+                Route::post('/{slug}/duplicate', [AdminThemeController::class, 'duplicate'])->name('duplicate');
+                Route::delete('/{slug}', [AdminThemeController::class, 'destroy'])->name('destroy');
+            });
 
-        // Admin Users
-        Route::prefix('admin-users')->name('admin-users.')->group(function () {
-            Route::get('/', [AdminAdminUserController::class, 'index'])->name('index');
-            Route::get('/create', [AdminAdminUserController::class, 'create'])->name('create');
-            Route::post('/', [AdminAdminUserController::class, 'store'])->name('store');
-            Route::get('/{username}/edit', [AdminAdminUserController::class, 'edit'])->name('edit');
-            Route::put('/{username}', [AdminAdminUserController::class, 'update'])->name('update');
-            Route::delete('/{username}', [AdminAdminUserController::class, 'destroy'])->name('destroy');
+            // Options
+            Route::get('/options', [AdminOptionsController::class, 'index'])->name('options.index');
+            Route::put('/options', [AdminOptionsController::class, 'update'])->name('options.update');
+
+            // Admin Users
+            Route::prefix('admin-users')->name('admin-users.')->group(function () {
+                Route::get('/', [AdminAdminUserController::class, 'index'])->name('index');
+                Route::get('/create', [AdminAdminUserController::class, 'create'])->name('create');
+                Route::post('/', [AdminAdminUserController::class, 'store'])->name('store');
+                Route::get('/{username}/edit', [AdminAdminUserController::class, 'edit'])->name('edit');
+                Route::put('/{username}', [AdminAdminUserController::class, 'update'])->name('update');
+                Route::delete('/{username}', [AdminAdminUserController::class, 'destroy'])->name('destroy');
+            });
         });
 
         // Ranks
@@ -225,21 +236,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::delete('/{id}', [AdminServerConfigController::class, 'destroy'])->name('destroy');
         });
 
-        // Tools
-        Route::prefix('tools')->name('tools.')->group(function () {
-            Route::get('/', [AdminToolsController::class, 'index'])->name('index');
-            Route::post('/optimize-db', [AdminToolsController::class, 'optimizeDb'])->name('optimize-db');
-            Route::post('/reset-game', [AdminToolsController::class, 'resetGame'])->name('reset-game');
-            Route::post('/delete-players', [AdminToolsController::class, 'deletePlayers'])->name('delete-players');
-            Route::post('/partial-reset', [AdminToolsController::class, 'partialReset'])->name('partial-reset');
-            Route::post('/reset-collations', [AdminToolsController::class, 'resetCollations'])->name('reset-collations');
-        });
+        Route::middleware('admin.superadmin')->group(function () {
 
-        // Update
-        Route::prefix('update')->name('update.')->group(function () {
-            Route::get('/', [AdminUpdateController::class, 'index'])->name('index');
-            Route::post('/apply', [AdminUpdateController::class, 'apply'])->name('apply');
-            Route::post('/stream', [AdminUpdateController::class, 'stream'])->name('stream');
+            // Tools
+            Route::prefix('tools')->name('tools.')->group(function () {
+                Route::get('/', [AdminToolsController::class, 'index'])->name('index');
+                Route::post('/optimize-db', [AdminToolsController::class, 'optimizeDb'])->name('optimize-db');
+                Route::post('/reset-game', [AdminToolsController::class, 'resetGame'])->name('reset-game');
+                Route::post('/delete-players', [AdminToolsController::class, 'deletePlayers'])->name('delete-players');
+                Route::post('/partial-reset', [AdminToolsController::class, 'partialReset'])->name('partial-reset');
+                Route::post('/reset-collations', [AdminToolsController::class, 'resetCollations'])->name('reset-collations');
+            });
+
+            // Update
+            Route::prefix('update')->name('update.')->group(function () {
+                Route::get('/', [AdminUpdateController::class, 'index'])->name('index');
+                Route::post('/apply', [AdminUpdateController::class, 'apply'])->name('apply');
+                Route::post('/stream', [AdminUpdateController::class, 'stream'])->name('stream');
+            });
         });
     });
 });

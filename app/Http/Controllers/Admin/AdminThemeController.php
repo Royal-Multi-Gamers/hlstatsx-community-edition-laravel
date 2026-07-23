@@ -45,6 +45,11 @@ class AdminThemeController extends Controller
             'meta.name'         => ['required', 'string', 'max:64'],
             'meta.description'  => ['nullable', 'string', 'max:255'],
             'colors'            => ['required', 'array'],
+            // Values land verbatim inside a <style> block, so reject anything
+            // that could close it or inject extra rules.
+            'colors.*'          => ['string', 'max:128', 'regex:/^[^<>{};@\\\\`]+$/'],
+            'typography.*'      => ['string', 'max:128', 'regex:/^[^<>{};@\\\\`]+$/'],
+            'layout.*'          => ['string', 'max:128', 'regex:/^[^<>{};@\\\\`]+$/'],
         ]);
 
         $existing = $this->themes->load($slug);

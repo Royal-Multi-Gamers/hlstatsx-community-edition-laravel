@@ -12,7 +12,7 @@
             'url' => route('players.show', $player->playerId),
             'description' => $player->fullName ?: null,
             'sameAs' => $steamId64 ? ['https://steamcommunity.com/profiles/' . $steamId64] : null,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
     </x-slot:head>
 
 @php

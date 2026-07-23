@@ -12,7 +12,7 @@
             'url' => route('servers.show', $server->serverId),
             'game' => $server->realgame,
             'serverStatus' => ($server->last_event ?? 0) >= now()->subMinutes(5)->timestamp ? 'Online' : 'Offline',
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) !!}</script>
     </x-slot:head>
 
     {{-- Server info header --}}

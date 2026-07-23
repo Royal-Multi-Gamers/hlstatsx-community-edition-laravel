@@ -21,6 +21,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminAdminUserController extends Controller
 {
@@ -39,13 +40,13 @@ class AdminAdminUserController extends Controller
     {
         $data = $request->validate([
             'username' => ['required', 'string', 'max:16', 'unique:hlstats_Users,username'],
-            'password' => ['required', 'string', 'min:4'],
+            'password' => ['required', 'string', 'min:12'],
             'acclevel' => ['required', 'integer', 'in:0,80,100'],
         ]);
 
         DB::table('hlstats_Users')->insert([
             'username' => $data['username'],
-            'password' => md5($data['password']),
+            'password' => Hash::make($data['password']),
             'acclevel' => $data['acclevel'],
             'playerId' => 0,
         ]);
@@ -65,13 +66,13 @@ class AdminAdminUserController extends Controller
             'acclevel' => ['required', 'integer', 'in:0,80,100'],
         ];
         if ($request->filled('password')) {
-            $rules['password'] = ['string', 'min:4'];
+            $rules['password'] = ['string', 'min:12'];
         }
         $data = $request->validate($rules);
 
         $update = ['acclevel' => $data['acclevel']];
         if ($request->filled('password')) {
-            $update['password'] = md5($request->password);
+            $update['password'] = Hash::make($request->password);
         }
 
         DB::table('hlstats_Users')->where('username', $username)->update($update);
