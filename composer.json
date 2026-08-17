@@ -25,6 +25,9 @@
         "pestphp/pest": "^4.7",
         "pestphp/pest-plugin-laravel": "^4.1"
     },
+    "suggest": {
+        "ext-gd": "Required to render forum signature images (/players/{id}/signature.png); must be built with FreeType support."
+    },
     "autoload": {
         "psr-4": {
             "App\\": "app/",

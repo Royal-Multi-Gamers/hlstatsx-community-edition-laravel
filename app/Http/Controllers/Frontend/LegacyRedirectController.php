@@ -19,53 +19,139 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Maps the pre-rebase /hlstats.php?mode=… URLs onto the clean routes.
+ *
+ * Everything answers with a 301 so Google consolidates the legacy URL into the
+ * new one instead of keeping both. Modes that no longer exist answer 404 rather
+ * than bouncing to the home page: a mass redirect to "/" is treated as a soft
+ * 404 by search engines and is what caused the "Page with redirect" reports.
+ */
 class LegacyRedirectController extends Controller
 {
     /**
-     * Redirect legacy ?mode=X&game=Y URLs to the new clean routes.
+     * Legacy mode => route name, for listing pages that take no identifier.
+     * A ?game= parameter is forwarded as a query string when present.
      */
-    public function redirect(Request $request)
+    private const LISTING_MODES = [
+        ''          => 'home',
+        'home'      => 'home',
+        'main'      => 'home',
+        'index'     => 'home',
+        'search'    => 'search',
+        'players'   => 'players.index',
+        'top10'     => 'players.index',
+        'clans'     => 'clans.index',
+        'servers'   => 'servers.index',
+        'livestats' => 'servers.index',
+        'weapons'   => 'weapons.index',
+        'maps'      => 'maps.index',
+        'actions'   => 'actions.index',
+        'awards'    => 'awards.index',
+        'ribbons'   => 'awards.index',
+        'chat'      => 'chat.index',
+        'countries' => 'countries.index',
+        'bans'      => 'bans.index',
+        'cheaters'  => 'bans.index',
+        'roles'     => 'roles.index',
+        'help'      => 'help',
+    ];
+
+    /**
+     * Legacy mode => [route name, route parameter, legacy query parameter, numeric?].
+     * Both the historical HLstatsX:CE names (playerinfo) and the shorter aliases
+     * used by some skins (player) are accepted.
+     */
+    private const DETAIL_MODES = [
+        'playerinfo' => ['players.show', 'id',   'player', true],
+        'player'     => ['players.show', 'id',   'player', true],
+        'claninfo'   => ['clans.show',   'id',   'clan',   true],
+        'clan'       => ['clans.show',   'id',   'clan',   true],
+        'serverinfo' => ['servers.show', 'id',   'server', true],
+        'server'     => ['servers.show', 'id',   'server', true],
+        'awardinfo'  => ['awards.detail', 'id',  'award',  true],
+        'weaponinfo' => ['weapons.show', 'code', 'weapon', false],
+        'weapon'     => ['weapons.show', 'code', 'weapon', false],
+        'roleinfo'   => ['roles.show',   'code', 'role',   false],
+        'role'       => ['roles.show',   'code', 'role',   false],
+        'mapinfo'    => ['maps.show',    'map',  'map',    false],
+        'map'        => ['maps.show',    'map',  'map',    false],
+        'gamepage'   => ['game.show',    'code', 'game',   false],
+        'game'       => ['game.show',    'code', 'game',   false],
+    ];
+
+    public function redirect(Request $request, PlayerSignatureController $signatures): Response
     {
-        $mode = $request->query('mode', 'home');
+        // ?mode[]=x would otherwise blow up on the string cast.
+        $mode = $request->query('mode', '');
+        $mode = is_scalar($mode) ? strtolower(trim((string) $mode)) : 'invalid';
+
+        // The forum signature is a real endpoint, not a redirect.
+        if ($mode === 'playersig') {
+            $player = $request->query('player');
+
+            if (!is_numeric($player)) {
+                abort(404);
+            }
+
+            return $signatures->show($request, (int) $player);
+        }
+
+        if (isset(self::DETAIL_MODES[$mode])) {
+            return $this->detailRedirect($request, $mode);
+        }
+
+        if (isset(self::LISTING_MODES[$mode])) {
+            return $this->listingRedirect($request, $mode);
+        }
+
+        // Retired modes (rss, trend, herotracker, …) have no equivalent page.
+        abort(404);
+    }
+
+    private function detailRedirect(Request $request, string $mode): RedirectResponse
+    {
+        [$route, $routeParam, $queryParam, $numeric] = self::DETAIL_MODES[$mode];
+
+        $value = $request->query($queryParam);
+
+        if ($value === null || $value === '' || !is_scalar($value)) {
+            abort(404);
+        }
+
+        if ($numeric) {
+            if (!is_numeric($value) || (int) $value <= 0) {
+                abort(404);
+            }
+            $value = (int) $value;
+        }
+
+        $params = [$routeParam => $value];
+
+        // Weapons, maps and roles are scoped by game in the new routes.
         $game = $request->query('game');
-
-        $map = [
-            'home'        => 'home',
-            'players'     => 'players.index',
-            'player'      => 'players.show',
-            'clans'       => 'clans.index',
-            'clan'        => 'clans.show',
-            'weapons'     => 'weapons.index',
-            'maps'        => 'maps.index',
-            'chat'        => 'chat.index',
-            'awards'      => 'awards.index',
-            'actions'     => 'actions.index',
-            'bans'        => 'bans.index',
-            'countries'   => 'countries.index',
-            'servers'     => 'servers.index',
-            'gamepage'    => 'game.show',
-        ];
-
-        $routeName = $map[$mode] ?? 'home';
-
-        $params = [];
-        if ($game) {
+        if ($game && !$numeric && $route !== 'game.show') {
             $params['game'] = $game;
         }
 
-        // Handle player/clan show routes
-        if ($mode === 'player' && $request->query('player')) {
-            return redirect()->route('players.show', ['id' => $request->query('player')]);
-        }
-        if ($mode === 'clan' && $request->query('clan')) {
-            return redirect()->route('clans.show', ['id' => $request->query('clan')]);
-        }
-        if ($mode === 'gamepage' && $game) {
-            return redirect()->route('game.show', ['code' => $game]);
+        return redirect()->route($route, $params, 301);
+    }
+
+    private function listingRedirect(Request $request, string $mode): RedirectResponse
+    {
+        $params = [];
+
+        foreach (['game', 'q', 'sort', 'country'] as $key) {
+            $value = $request->query($key);
+            if ($value !== null && $value !== '' && is_scalar($value)) {
+                $params[$key] = $value;
+            }
         }
 
-        return redirect()->route($routeName, $params);
+        return redirect()->route(self::LISTING_MODES[$mode], $params, 301);
     }
 }

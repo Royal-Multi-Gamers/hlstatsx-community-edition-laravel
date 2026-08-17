@@ -13,6 +13,7 @@ use App\Http\Controllers\Frontend\LegacyRedirectController;
 use App\Http\Controllers\Frontend\LiveFeedController;
 use App\Http\Controllers\Frontend\MapController;
 use App\Http\Controllers\Frontend\PlayerController;
+use App\Http\Controllers\Frontend\PlayerSignatureController;
 use App\Http\Controllers\Frontend\SearchController;
 use App\Http\Controllers\Frontend\ServerController;
 use App\Http\Controllers\Frontend\SitemapController;
@@ -50,6 +51,7 @@ Route::post('/language/{locale}', [LocaleController::class, 'switch'])->name('la
 
 // SEO
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
 // Steam user space
 Route::get('/auth/steam', [SteamAuthController::class, 'redirect'])->name('steam.login');
@@ -75,6 +77,7 @@ Route::prefix('players')->name('players.')->group(function () {
     Route::get('/{id}/sessions', [PlayerController::class, 'sessions'])->name('sessions')->where('id', '[0-9]+');
     Route::get('/{id}/awards', [PlayerController::class, 'awards'])->name('awards')->where('id', '[0-9]+');
     Route::get('/{id}/chat', [PlayerController::class, 'chat'])->name('chat')->where('id', '[0-9]+');
+    Route::get('/{id}/signature.png', [PlayerSignatureController::class, 'show'])->name('signature')->where('id', '[0-9]+');
 });
 
 Route::prefix('clans')->name('clans.')->group(function () {

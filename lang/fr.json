@@ -526,5 +526,25 @@
     "GitHub rate limit exceeded (60 req/h per IP)": "Limite de requêtes GitHub dépassée (60 req/h par IP)",
     "resets in :seconds s": "réinitialisation dans :seconds s",
     "Set GITHUB_TOKEN in .env to raise it to 5000/h.": "Ajoutez GITHUB_TOKEN dans .env pour la passer à 5000/h.",
-    "Network error: :message": "Erreur réseau : :message"
+    "Network error: :message": "Erreur réseau : :message",
+
+    "Page not found": "Page introuvable",
+    "This page does not exist or has been removed.": "Cette page n'existe pas ou a été supprimée.",
+    "This page does not exist or has been removed. It may have been part of the old HLstatsX interface, or the player, clan or server you are looking for is no longer tracked.": "Cette page n'existe pas ou a été supprimée. Elle faisait peut-être partie de l'ancienne interface HLstatsX, ou le joueur, le clan ou le serveur recherché n'est plus suivi.",
+    "Access denied": "Accès refusé",
+    "You do not have permission to view this page.": "Vous n'avez pas l'autorisation de consulter cette page.",
+    "Page permanently removed": "Page définitivement supprimée",
+    "This page has been permanently removed.": "Cette page a été définitivement supprimée.",
+    "This page belonged to the old HLstatsX interface and has been permanently removed. It will not come back.": "Cette page appartenait à l'ancienne interface HLstatsX et a été définitivement supprimée. Elle ne reviendra pas.",
+    "Session expired": "Session expirée",
+    "Your session has expired.": "Votre session a expiré.",
+    "Your session has expired for security reasons. Please reload the page and try again.": "Votre session a expiré pour des raisons de sécurité. Rechargez la page et réessayez.",
+    "Too many requests": "Trop de requêtes",
+    "You have sent too many requests.": "Vous avez envoyé trop de requêtes.",
+    "You have sent too many requests in a short period. Please wait a moment before trying again.": "Vous avez envoyé trop de requêtes en peu de temps. Patientez un instant avant de réessayer.",
+    "Server error": "Erreur serveur",
+    "Something went wrong on our side. The error has been logged and will be looked at. Please try again in a few minutes.": "Une erreur est survenue de notre côté. Elle a été enregistrée et sera analysée. Réessayez dans quelques minutes.",
+    "Service unavailable": "Service indisponible",
+    "The site is temporarily unavailable, most likely for maintenance. Please come back in a few minutes.": "Le site est temporairement indisponible, probablement pour maintenance. Revenez dans quelques minutes.",
+    "Search for a player, clan or server…": "Rechercher un joueur, un clan ou un serveur…"
 }

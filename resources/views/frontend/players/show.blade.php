@@ -351,9 +351,14 @@
                         </div>
                         @php
                             $profileUrl = route('players.show', $player->playerId);
-                            $sigUrl     = rtrim(config('app.url'), '/') . '/hlstats.php?mode=playersig&player=' . $player->playerId;
+                            $sigUrl     = route('players.signature', $player->playerId);
                             $bbCode     = '[url=' . $profileUrl . '][img]' . $sigUrl . '[/img][/url]';
                         @endphp
+                        <div style="margin-bottom:8px;">
+                            <img src="{{ $sigUrl }}" alt="{{ __('Forum Signature') }}"
+                                 width="400" height="75" loading="lazy"
+                                 style="max-width:100%; height:auto; border:1px solid var(--border); border-radius:3px;">
+                        </div>
                         <div style="font-size:11px; color:var(--text-secondary); margin-bottom:6px;">
                             {{ __('Use this code in your forum signature:') }}
                         </div>

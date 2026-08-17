@@ -169,15 +169,117 @@ Recherche globale par pseudo, clan, serveur.
 
 ---
 
+## Signature forum — `/players/{id}/signature.png`
+
+Image PNG 400×75 générée à la volée (GD + FreeType), destinée aux signatures de
+forum. Elle affiche le logo du jeu, le drapeau du pays, le pseudo (préfixé du tag
+de clan), le rang, puis skill / kills / deaths / K:D / précision / % headshot.
+
+- Fond : `hlstatsimg/games/{game}/sig/{1..11}.png`, avec repli sur
+  `hlstatsimg/sig/{1..11}.png`. Le numéro est dérivé du `playerId`, ou forcé via
+  `?background=N` (`?bg=N` accepté, valeur bornée à 1–11).
+- Réponse mise en cache 5 minutes côté serveur et côté client
+  (`Cache-Control: public, max-age=300`).
+- Le BBCode prêt à copier est affiché sur la fiche joueur.
+
+> Nécessite l'extension PHP **GD compilée avec FreeType**. Si elle est absente, la
+> route répond `503` et journalise une erreur explicite plutôt que de servir une
+> image cassée.
+
+---
+
 ## Redirection legacy — `/hlstats.php`
 
-Support des URLs de l'ancienne version :
+Les URLs de l'ancienne interface HLstatsX sont toujours indexées par Google et
+présentes dans les signatures de forum. Elles répondent donc en **301** (redirection
+permanente, pour que l'index se consolide sur la nouvelle URL) ou en **404** pour
+les modes supprimés — jamais par un renvoi vers l'accueil, que Search Console
+signale comme *soft 404* / « Page avec redirection ».
+
+Le paramètre `mode` est insensible à la casse. Les paramètres `game`, `q`, `sort`
+et `country` sont conservés lors de la redirection.
+
+### Pages de listing (301)
+
+| `mode` | Destination |
+|---|---|
+| *(vide)*, `home`, `main`, `index` | `/` |
+| `search` | `/search` |
+| `players`, `top10` | `/players` |
+| `clans` | `/clans` |
+| `servers`, `livestats` | `/servers` |
+| `weapons` | `/weapons` |
+| `maps` | `/maps` |
+| `actions` | `/actions` |
+| `awards`, `ribbons` | `/awards` |
+| `chat` | `/chat` |
+| `countries` | `/countries` |
+| `bans`, `cheaters` | `/bans` |
+| `roles` | `/roles` |
+| `help` | `/help` |
+
+### Pages de détail (301)
+
+| `mode` | Paramètre | Destination |
+|---|---|---|
+| `playerinfo`, `player` | `player` | `/players/{id}` |
+| `claninfo`, `clan` | `clan` | `/clans/{id}` |
+| `serverinfo`, `server` | `server` | `/servers/{id}` |
+| `awardinfo` | `award` | `/awards/{id}/detail` |
+| `weaponinfo`, `weapon` | `weapon` | `/weapons/{code}` |
+| `roleinfo`, `role` | `role` | `/roles/{code}` |
+| `mapinfo`, `map` | `map` | `/maps/{map}` |
+| `gamepage`, `game` | `game` | `/game/{code}` |
+
+Un identifiant absent, vide, non numérique ou négatif donne un **404**.
+
+### Cas particuliers
+
+- `mode=playersig&player={id}` n'est **pas** une redirection : il sert directement
+  l'image de signature (voir section ci-dessus).
+- Tout autre `mode` (`rss`, `trend`, `herotracker`, `statsme`…) répond **404**.
 
 ```
-/hlstats.php?mode=players&game=cstrike  →  /players?game=cstrike
-/hlstats.php?mode=clans                  →  /clans
-/hlstats.php?mode=servers                →  /servers
+/hlstats.php?mode=players&game=cstrike   →  301  /players?game=cstrike
+/hlstats.php?mode=playerinfo&player=7212 →  301  /players/7212
+/hlstats.php?mode=playersig&player=7212  →  200  image/png
+/hlstats.php?mode=rss                    →  404
 ```
+
+---
+
+## Pages d'erreur
+
+Vues personnalisées dans `resources/views/errors/`, toutes en `noindex` :
+
+| Code | Vue | Rendu |
+|---|---|---|
+| 403 | `errors/403` | layout complet |
+| 404 | `errors/404` | layout complet + champ de recherche |
+| 410 | `errors/410` | layout complet |
+| 419 | `errors/419` | layout complet |
+| 429 | `errors/429` | layout complet |
+| 500 | `errors/500` | **autonome** |
+| 503 | `errors/503` | **autonome** |
+
+Les pages 500 et 503 sont volontairement autonomes : elles n'utilisent ni la base
+de données, ni le cache, ni le manifeste Vite. Le layout principal interroge
+`hlstats_Options` via l'en-tête ; s'en servir ici déclencherait une seconde
+exception au moment précis où ces dépendances sont en panne, et Laravel
+retomberait sur sa page brute.
+
+---
+
+## `robots.txt`
+
+Servi par une route (`SitemapController@robots`) et non par un fichier statique,
+afin que la ligne `Sitemap:` porte une URL absolue — une valeur relative est
+invalide et silencieusement ignorée par Search Console.
+
+`/admin`, `/install`, `/account`, `/auth/`, `/api/` et `/ingame/` sont exclus du
+crawl. `/hlstats.php` reste volontairement crawlable : le bloquer empêcherait
+Google de constater les 301 et les 404 qui résolvent les signalements
+« Page avec redirection ».
 
 ---
 

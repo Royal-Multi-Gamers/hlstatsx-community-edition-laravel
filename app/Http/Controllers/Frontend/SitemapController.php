@@ -13,6 +13,33 @@ use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
+    /**
+     * robots.txt is served from here rather than public/ so the Sitemap line can
+     * carry an absolute URL — the protocol says a bare path is invalid, and
+     * Search Console silently ignores it.
+     */
+    public function robots(): Response
+    {
+        $lines = [
+            'User-agent: *',
+            // Nothing behind these paths belongs in an index, and crawling them
+            // only burns crawl budget on redirects and login walls.
+            'Disallow: /admin',
+            'Disallow: /install',
+            'Disallow: /account',
+            'Disallow: /auth/',
+            'Disallow: /api/',
+            'Disallow: /ingame/',
+            '',
+            'Sitemap: ' . route('sitemap'),
+            '',
+        ];
+
+        return response(implode("\n", $lines), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
     public function index(): Response
     {
         $entries = [];

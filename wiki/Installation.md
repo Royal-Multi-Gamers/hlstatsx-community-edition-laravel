@@ -10,6 +10,21 @@
 | MySQL      | 5.7+ (ou MariaDB 10.3+) |
 | Redis      | 6+              |
 
+### Extensions PHP
+
+Outre celles requises par Laravel, l'extension **GD compilée avec FreeType** est
+nécessaire pour générer les images de signature de forum
+(`/players/{id}/signature.png`). Sans elle, cette route répond `503` ; le reste du
+site fonctionne normalement.
+
+```bash
+# Debian / Ubuntu
+sudo apt install php8.3-gd && sudo systemctl reload php8.3-fpm
+
+# Vérification
+php -r "var_dump(extension_loaded('gd'), gd_info()['FreeType Support']);"
+```
+
 La base de données doit déjà exister et contenir les tables `hlstats_*` générées par le daemon Perl (voir [SnipeZilla/HLSTATS-2](https://github.com/SnipeZilla/HLSTATS-2)).
 
 ---
