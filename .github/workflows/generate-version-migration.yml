@@ -103,31 +103,10 @@ jobs:
           ls -lh "${ARCHIVE}"
 
       - name: Upload archive to release
-        timeout-minutes: 45
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ github.event.release.tag_name }}"
-          ARCHIVE="${{ steps.archive.outputs.archive }}"
-
-          # Remove any leftover asset first: --clobber can fail with HTTP 500
-          # when a previous upload left the asset in a broken state.
-          gh release delete-asset "${TAG}" "${ARCHIVE}" --yes || true
-
-          for attempt in 1 2 3 4 5; do
-            echo "Upload attempt ${attempt} started at $(date -u +%T) ($(du -h "${ARCHIVE}" | cut -f1))"
-
-            # gh prints nothing while transferring, so cap each attempt:
-            # a stalled connection becomes a retry instead of a 6h job.
-            if timeout 600 gh release upload "${TAG}" "${ARCHIVE}" --clobber; then
-              echo "Upload succeeded at $(date -u +%T)"
-              exit 0
-            fi
-
-            echo "Upload attempt ${attempt} failed, retrying in $((attempt * 15))s"
-            gh release delete-asset "${TAG}" "${ARCHIVE}" --yes || true
-            sleep $((attempt * 15))
-          done
-
-          echo "Upload failed after 5 attempts"
-          exit 1
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.archive.outputs.archive }}
+          asset_name: ${{ steps.archive.outputs.archive }}
+          tag: ${{ github.event.release.tag_name }}
+          overwrite: true
