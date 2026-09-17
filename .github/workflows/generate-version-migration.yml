@@ -74,22 +74,31 @@ jobs:
           git commit -m "chore: add version migration for v${{ steps.version.outputs.version }}"
           git push origin HEAD:${{ github.event.release.target_commitish }}
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+
       - name: Build release archive
         id: archive
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           ARCHIVE="hlstatsx-ce-v${VERSION}.zip"
-          zip -r "${ARCHIVE}" . \
-            -x "*.git/*" \
-            -x ".env" \
-            -x "node_modules/*" \
-            -x "vendor/*" \
-            -x "storage/logs/*" \
-            -x "storage/framework/cache/*" \
-            -x "storage/framework/sessions/*" \
-            -x "storage/framework/testing/*" \
-            -x "storage/framework/views/*" \
-            -x "*.zip"
+
+          # Tracked files only, honouring export-ignore in .gitattributes.
+          # Whitelist by design: vendor, node_modules, .git and .env can never
+          # leak into the archive.
+          git archive --format=zip --output="${ARCHIVE}" HEAD
+
+          # Compiled assets are gitignored, so append them after the fact.
+          zip -r "${ARCHIVE}" public/build
+
           echo "archive=${ARCHIVE}" >> $GITHUB_OUTPUT
           ls -lh "${ARCHIVE}"
 

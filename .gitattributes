@@ -9,3 +9,8 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+/tests export-ignore
+/phpunit.xml export-ignore
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/file_heads.txt export-ignore
