@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Clan;
 use App\Models\GameMap;
+use App\Models\Page;
 use App\Models\Player;
 use App\Models\Server;
 use App\Models\Weapon;
@@ -70,6 +71,19 @@ class SitemapController extends Controller
                 'priority' => $routeName === 'home' ? '1.0' : '0.7',
             ];
         }
+
+        // Editable static pages (privacy, cookies, legal notice, custom pages).
+        Page::published()
+            ->get()
+            ->groupBy('slug')
+            ->each(function ($translations, string $slug) use (&$entries): void {
+                $entries[] = [
+                    'loc' => route('pages.show', $slug),
+                    'lastmod' => optional($translations->max('updated_at'))->toAtomString() ?? now()->toAtomString(),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.3',
+                ];
+            });
 
         Player::query()
             ->where('hideranking', 0)

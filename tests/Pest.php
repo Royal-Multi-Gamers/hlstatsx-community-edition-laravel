@@ -48,3 +48,23 @@ function something()
 {
     // ..
 }
+
+/**
+ * The legacy HLStatsX tables are provisioned by database/install.sql, not by
+ * migrations, so the in-memory test database has none of them. Tests that
+ * render a frontend page need hlstats_Options, which every layout reads.
+ */
+function createLegacyOptionsTable(): void
+{
+    \App\Models\Option::flushCache();
+
+    if (\Illuminate\Support\Facades\Schema::hasTable('hlstats_Options')) {
+        return;
+    }
+
+    \Illuminate\Support\Facades\Schema::create('hlstats_Options', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->string('keyname', 32)->primary();
+        $table->string('value', 128)->default('');
+        $table->tinyInteger('opttype')->default(1);
+    });
+}

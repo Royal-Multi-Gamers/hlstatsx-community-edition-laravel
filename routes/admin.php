@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminGameController;
 use App\Http\Controllers\Admin\AdminHostGroupController;
 use App\Http\Controllers\Admin\AdminOptionsController;
+use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPlayerController;
 use App\Http\Controllers\Admin\AdminRankController;
 use App\Http\Controllers\Admin\AdminRibbonController;
@@ -135,6 +136,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Options
             Route::get('/options', [AdminOptionsController::class, 'index'])->name('options.index');
             Route::put('/options', [AdminOptionsController::class, 'update'])->name('options.update');
+
+            // Static pages (privacy policy, cookie policy, legal notice, ...)
+            Route::prefix('pages')->name('pages.')->group(function () {
+                Route::get('/', [AdminPageController::class, 'index'])->name('index');
+                Route::get('/create', [AdminPageController::class, 'create'])->name('create');
+                Route::post('/', [AdminPageController::class, 'store'])->name('store');
+                Route::get('/{id}/edit', [AdminPageController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+                Route::put('/{id}', [AdminPageController::class, 'update'])->name('update')->where('id', '[0-9]+');
+                Route::delete('/{id}', [AdminPageController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            });
 
             // Admin Users
             Route::prefix('admin-users')->name('admin-users.')->group(function () {

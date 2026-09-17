@@ -12,6 +12,7 @@ use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\LegacyRedirectController;
 use App\Http\Controllers\Frontend\LiveFeedController;
 use App\Http\Controllers\Frontend\MapController;
+use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\PlayerController;
 use App\Http\Controllers\Frontend\PlayerSignatureController;
 use App\Http\Controllers\Frontend\SearchController;
@@ -111,6 +112,12 @@ Route::get('/awards/ribbon/{id}', [AwardController::class, 'ribbonDetail'])->nam
 Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 Route::get('/roles/{code}', [RoleController::class, 'show'])->name('roles.show');
 Route::view('/help', 'frontend.help')->name('help');
+
+// ── Editable static pages (privacy, cookies, legal notice, custom pages) ──
+Route::get('/privacy', [PageController::class, 'show'])->defaults('slug', 'privacy')->name('privacy');
+Route::get('/cookies', [PageController::class, 'show'])->defaults('slug', 'cookies')->name('cookies');
+Route::get('/legal', [PageController::class, 'show'])->defaults('slug', 'legal')->name('legal');
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show')->where('slug', '[a-z0-9-]+');
 Route::get('/actions', [ActionController::class, 'index'])->name('actions.index');
 Route::get('/actions/{id}', [ActionController::class, 'show'])->name('actions.show')->where('id', '[0-9]+');
 Route::get('/bans', [BanController::class, 'index'])->name('bans.index');

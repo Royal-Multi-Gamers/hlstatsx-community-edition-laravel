@@ -7,6 +7,10 @@ import Chart from 'chart.js/auto';
 window.Chart = Chart;
 
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 window.L = L;
 
 Alpine.start();
@@ -14,9 +18,9 @@ Alpine.start();
 // Fix Leaflet icon paths when bundled with Vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
 });
 
 /**
@@ -169,4 +173,47 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initSidebarNavigation);
 } else {
     initSidebarNavigation();
+}
+
+/**
+ * Cookie notice. Only strictly necessary cookies are set by the application,
+ * so this banner informs the visitor and records the acknowledgement; nothing
+ * on the page is blocked while it is displayed.
+ */
+function initCookieBanner() {
+    const banner = document.querySelector('[data-cookie-banner]');
+    if (!banner) return;
+
+    const cookieName = 'hlx_consent';
+    const maxAge = 60 * 60 * 24 * 180; // 180 days
+
+    const hasConsent = document.cookie
+        .split('; ')
+        .some((entry) => entry.startsWith(cookieName + '='));
+
+    if (!hasConsent) {
+        banner.hidden = false;
+    }
+
+    banner.querySelectorAll('[data-cookie-accept]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `${cookieName}=1; Max-Age=${maxAge}; Path=/; SameSite=Lax${secure}`;
+            banner.hidden = true;
+        });
+    });
+
+    // Footer link that lets the visitor read the notice again.
+    document.querySelectorAll('[data-cookie-reopen]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            banner.hidden = false;
+        });
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCookieBanner);
+} else {
+    initCookieBanner();
 }

@@ -18,8 +18,6 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $resolvedTitle }} — {{ config('services.hlstats.site_name', 'HLStatsX: CE') }}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -140,7 +138,7 @@
             </div>
 
             {{-- Configuration --}}
-            <div x-data="{ open: {{ request()->routeIs('admin.options.*', 'admin.admin-users.*', 'admin.clan-tags.*', 'admin.host-groups.*', 'admin.server-config.*') ? 'true' : 'false' }} }">
+            <div x-data="{ open: {{ request()->routeIs('admin.options.*', 'admin.admin-users.*', 'admin.pages.*', 'admin.clan-tags.*', 'admin.host-groups.*', 'admin.server-config.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span>{{ __('Configuration') }}</span>
                     <svg :class="{ 'collapsed': !open }" class="sidebar-chevron" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5L5 6.5L8 3.5"/></svg>
@@ -149,6 +147,7 @@
                     @if(auth('admin')->user()?->isSuperAdmin())
                         <a href="{{ route('admin.options.index') }}" @class(['active' => request()->routeIs('admin.options.*')])>{{ __('Options') }}</a>
                         <a href="{{ route('admin.admin-users.index') }}" @class(['active' => request()->routeIs('admin.admin-users.*')])>{{ __('Admin Users') }}</a>
+                        <a href="{{ route('admin.pages.index') }}" @class(['active' => request()->routeIs('admin.pages.*')])>{{ __('Pages') }}</a>
                     @endif
                     <a href="{{ route('admin.clan-tags.index') }}" @class(['active' => request()->routeIs('admin.clan-tags.*')])>{{ __('Clan Tags') }}</a>
                     <a href="{{ route('admin.host-groups.index') }}" @class(['active' => request()->routeIs('admin.host-groups.*')])>{{ __('Host Groups') }}</a>

@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Self-hosted Inter — no Google Fonts request, no third-party transfer */
+@import '@fontsource-variable/inter';
+
 /* ============================================================
    HLStatsX: CE — CSS Variables from theme (injected via PHP)
    All colors must use var(--*) — no hardcoded values allowed
@@ -753,6 +756,79 @@
   padding-top: 8px;
 }
 
+/* Cookie notice banner */
+.hlx-cookie-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(880px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  padding: 14px 18px;
+}
+
+.hlx-cookie-banner[hidden] {
+  display: none;
+}
+
+.hlx-cookie-banner__text {
+  flex: 1 1 320px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.hlx-cookie-banner__text strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.hlx-cookie-banner__text p {
+  margin: 0;
+}
+
+.hlx-cookie-banner__actions {
+  flex: 0 0 auto;
+}
+
+/* Static pages (privacy, cookies, legal, custom) */
+.hlx-static-page h2 {
+  color: var(--accent-secondary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin: 20px 0 8px;
+}
+
+.hlx-static-page p {
+  margin-bottom: 10px;
+}
+
+.hlx-static-page ul {
+  list-style: disc;
+  padding-left: 22px;
+  margin-bottom: 12px;
+}
+
+.hlx-static-page li {
+  margin-bottom: 6px;
+}
+
+.hlx-static-page code {
+  background-color: var(--bg-surface-alt);
+  border-radius: var(--border-radius-sm);
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
 /* Admin sidebar toggle — hidden on desktop */
 .hlx-admin-toggle {
   display: none;
@@ -771,6 +847,17 @@
 @media (max-width: 768px) {
   .hlx-layout-shell {
     padding-left: 0 !important;
+  }
+
+  .hlx-cookie-banner {
+    flex-direction: column;
+    align-items: stretch;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
   }
 
   .hlx-app-shell.hlx-nav-open .hlx-mobile-topbar-btn .hlx-icon-open {
